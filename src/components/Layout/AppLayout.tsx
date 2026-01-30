@@ -21,7 +21,7 @@ export function Layout() {
         <div className="w-8 h-8 bg-teal-600 rounded-lg flex items-center justify-center text-white">
           <PiggyBank size={18} />
         </div>
-        <h1 className="text-lg font-bold text-gray-900">MoneyMgr</h1>
+        <h1 className="text-lg font-bold text-gray-900">Money Manager</h1>
       </div>
 
       <main className="md:pl-64 min-h-screen transition-all duration-300">
