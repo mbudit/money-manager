@@ -4,12 +4,12 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBYy58iyTP-hnVhoBR-FMqJF0g5Vd6u9h8",
-  authDomain: "money-manager-fee53.firebaseapp.com",
-  projectId: "money-manager-fee53",
-  storageBucket: "money-manager-fee53.firebasestorage.app",
-  messagingSenderId: "860224746195",
-  appId: "1:860224746195:web:d12e2085956fbcfa699a26"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
 const app = initializeApp(firebaseConfig);
