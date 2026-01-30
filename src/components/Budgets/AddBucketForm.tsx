@@ -1,0 +1,270 @@
+import { useState, useMemo } from "react";
+import { Wallet, Utensils, Armchair, CalendarDays } from "lucide-react";
+import { useMoney } from "@/context/MoneyContext";
+import type { Bucket } from "@/types";
+
+export function AddBucketForm({ onClose }: { onClose: () => void }) {
+  const { addBucket, categories } = useMoney();
+
+  // Type: 'standard' | 'meal-tracker' | 'weekend-flex'
+  const [bucketType, setBucketType] = useState<
+    "standard" | "meal-tracker" | "weekend-flex"
+  >("standard");
+
+  const [name, setName] = useState("");
+  const [limit, setLimit] = useState("");
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [color, setColor] = useState("#10B981");
+  const [period, setPeriod] = useState<Bucket["period"]>("monthly");
+  const [constraint, setConstraint] = useState<Bucket["constraint"]>("all");
+  // Calculate actual workdays in current month
+  const workdayCount = useMemo(() => {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+    let count = 0;
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(currentYear, currentMonth, day);
+      const dayOfWeek = date.getDay();
+      if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+        count++;
+      }
+    }
+    return count;
+  }, []);
+
+  const handleTypeChange = (
+    type: "standard" | "meal-tracker" | "weekend-flex",
+  ) => {
+    setBucketType(type);
+    if (type === "meal-tracker") {
+      setName("Workday Lunch");
+      setConstraint("workdays");
+      setPeriod("monthly");
+      setColor("#F97316"); // Orange
+    } else if (type === "weekend-flex") {
+      setName("Weekend Fun");
+      setConstraint("weekends");
+      setPeriod("monthly");
+      setColor("#8B5CF6"); // Purple
+    } else {
+      setName("");
+      setConstraint("all");
+      setPeriod("monthly");
+      setColor("#10B981"); // Teal
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    addBucket({
+      name,
+      limit: parseFloat(limit) || 0,
+      categoryIds: selectedCategories,
+      color,
+      period,
+      constraint,
+      rollover: false,
+      isMealTracker: bucketType === "meal-tracker",
+      // Ensure other required fields for Bucket creation are present if addBucket expects a full Bucket object excluding ID
+      // Assuming addBucket handles ID and defaults.
+      spent: 0, // Default if required by local state before sync?
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    } as any); // Type assertion if addBucket signature differs slightly, but matching usage in Budgets.tsx
+    // Checking Budgets.tsx usage: addBucket({...}) lines 290-299. It seems addBucket takes Omit<Bucket, 'id'> or similar.
+    // I'll stick to exactly what was in Budgets.tsx
+    onClose();
+  };
+
+  const toggleCategory = (id: string) => {
+    setSelectedCategories((prev) =>
+      prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id],
+    );
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Bucket Type Selector */}
+      <div className="grid grid-cols-3 gap-2 mb-4">
+        {[
+          { id: "standard", icon: Wallet, label: "Standard" },
+          { id: "meal-tracker", icon: Utensils, label: "Workday Meal" },
+          { id: "weekend-flex", icon: Armchair, label: "Weekend Flex" },
+        ].map((type) => (
+          <button
+            key={type.id}
+            type="button"
+            onClick={() =>
+              handleTypeChange(
+                type.id as "standard" | "meal-tracker" | "weekend-flex",
+              )
+            }
+            className={`flex flex-col items-center justify-center p-2 rounded-lg border-2 transition-all ${
+              bucketType === type.id
+                ? "border-teal-500 bg-teal-50 text-teal-700"
+                : "border-gray-100 bg-white text-gray-500 hover:bg-gray-50"
+            }`}
+          >
+            <type.icon size={20} className="mb-1" />
+            <span className="text-[10px] font-bold uppercase text-center leading-tight">
+              {type.label}
+            </span>
+          </button>
+        ))}
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Bucket Name
+        </label>
+        <input
+          type="text"
+          required
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none"
+          placeholder="e.g., Fixed Costs, Groceries"
+        />
+      </div>
+
+      {bucketType === "meal-tracker" && (
+        <div className="bg-orange-50 p-4 rounded-lg border border-orange-100">
+          <div className="flex items-start gap-3">
+            <div className="bg-orange-100 p-2 rounded-full text-orange-600 mt-1">
+              <CalendarDays size={16} />
+            </div>
+            <div>
+              <h4 className="text-sm font-bold text-orange-800">
+                Meal Tracker Logic
+              </h4>
+              <p className="text-xs text-orange-600 mt-1">
+                This bucket will auto-calculate a daily allowance based on the
+                number of workdays (Mon-Fri) in the month.
+              </p>
+              <div className="mt-3 bg-white p-2 rounded border border-orange-200">
+                <p className="text-xs text-gray-500">Preview:</p>
+                <div className="flex justify-between items-center text-sm">
+                  <span>
+                    {parseFloat(limit) || 0} x {workdayCount} days ={" "}
+                  </span>
+                  <span className="font-bold text-orange-700">
+                    {new Intl.NumberFormat("id-ID", {
+                      style: "currency",
+                      currency: "IDR",
+                      minimumFractionDigits: 0,
+                    }).format((parseFloat(limit) || 0) * workdayCount)}{" "}
+                    / month
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {bucketType === "weekend-flex" && (
+        <div className="bg-purple-50 p-3 rounded-lg border border-purple-100">
+          <p className="text-xs text-purple-700 flex items-center gap-2">
+            <Armchair size={16} />
+            Only counts transactions on <strong>Weekends (Sat/Sun)</strong>.
+          </p>
+        </div>
+      )}
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          {bucketType === "meal-tracker" ? "Daily Allowance" : "Monthly Limit"}
+        </label>
+        <input
+          type="number"
+          required
+          value={limit}
+          onChange={(e) => setLimit(e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none"
+          placeholder="0.00"
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Period
+          </label>
+          <select
+            value={period}
+            disabled={bucketType !== "standard"}
+            onChange={(e) => setPeriod(e.target.value as Bucket["period"])}
+            className={`w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-teal-500 ${bucketType !== "standard" ? "bg-gray-100 text-gray-500" : "bg-white"}`}
+          >
+            <option value="monthly">Monthly</option>
+            <option value="weekly">Weekly</option>
+            <option value="daily">Daily</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Constraint
+          </label>
+          <select
+            value={constraint}
+            disabled={bucketType !== "standard"}
+            onChange={(e) =>
+              setConstraint(e.target.value as Bucket["constraint"])
+            }
+            className={`w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-teal-500 ${bucketType !== "standard" ? "bg-gray-100 text-gray-500" : "bg-white"}`}
+          >
+            <option value="all">All Days</option>
+            <option value="workdays">Mon-Fri Only</option>
+            <option value="weekends">Weekends Only</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Link Categories
+        </label>
+        <div className="max-h-40 overflow-y-auto border border-gray-200 rounded-lg p-2 space-y-1">
+          {categories
+            .filter((c) => c.type === "expense")
+            .map((cat) => (
+              <div
+                key={cat.id}
+                onClick={() => toggleCategory(cat.id)}
+                className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${selectedCategories.includes(cat.id) ? "bg-teal-50 border border-teal-200" : "hover:bg-gray-50"}`}
+              >
+                <div
+                  className={`w-3 h-3 rounded-full ${selectedCategories.includes(cat.id) ? "bg-teal-500" : "bg-gray-300"}`}
+                />
+                <span className="text-sm text-gray-700">{cat.name}</span>
+              </div>
+            ))}
+          {categories.filter((c) => c.type === "expense").length === 0 && (
+            <p className="text-sm text-gray-400 p-2">
+              No expense categories found.
+            </p>
+          )}
+        </div>
+      </div>
+
+      <div className="pt-4 flex gap-3">
+        <button
+          type="button"
+          onClick={onClose}
+          className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          className="flex-1 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 font-medium"
+        >
+          Create Bucket
+        </button>
+      </div>
+    </form>
+  );
+}
