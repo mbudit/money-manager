@@ -27,7 +27,7 @@ export function AddTransactionModal({
 
   // Form State
   const [amount, setAmount] = useState("");
-  const [date, setDate] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [date, setDate] = useState(format(new Date(), "yyyy-MM-dd'T'HH:mm"));
   const [selectedBucketId, setSelectedBucketId] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [accountId, setAccountId] = useState("");
@@ -172,10 +172,10 @@ export function AddTransactionModal({
         {/* Date Input */}
         <div>
           <label className="block text-xs font-medium text-gray-500 mb-1">
-            {isRecurring ? "Start Date" : "Date"}
+            {isRecurring ? "Start Date" : "Date & Time"}
           </label>
           <input
-            type="date"
+            type="datetime-local"
             required
             value={date}
             onChange={(e) => setDate(e.target.value)}

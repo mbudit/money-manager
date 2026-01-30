@@ -48,7 +48,7 @@ export function TransactionList({
           <thead className="bg-gray-50 border-b border-gray-100">
             <tr>
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                Date
+                Date & Time
               </th>
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                 Category / Note
@@ -79,7 +79,7 @@ export function TransactionList({
                   className="hover:bg-gray-50 transition-colors"
                 >
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {format(new Date(transaction.date), "dd MMM yyyy")}
+                    {format(new Date(transaction.date), "dd MMM yyyy, HH:mm")}
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
