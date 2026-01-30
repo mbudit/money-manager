@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, AlertTriangle } from "lucide-react";
 import { useMoney } from "@/context/MoneyContext";
 import { Modal } from "@/components/UI/Modal";
 import { MealTrackerCard } from "@/components/Dashboard/MealTrackerCard";
@@ -8,7 +8,8 @@ import { BudgetCard } from "@/components/Budgets/BudgetCard";
 import type { Bucket } from "@/types";
 
 export function Budgets() {
-  const { buckets, categories, transactions, deleteBucket } = useMoney();
+  const { buckets, categories, transactions, accounts, deleteBucket } =
+    useMoney();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Helper to calculate spent amount for a bucket based on its categories and period constraints
@@ -86,6 +87,84 @@ export function Budgets() {
           <span>Add Bucket</span>
         </button>
       </div>
+
+      {/* Global Liquidity Check (Reconciliation) - Simplified */}
+      {(() => {
+        const totalCash = accounts.reduce((sum, acc) => sum + acc.balance, 0);
+
+        const totalBudgeted = buckets.reduce((sum, bucket) => {
+          if (bucket.isMealTracker) {
+            // Project Meal Daily Rate to Monthly (approx 22 days)
+            return sum + bucket.limit * 22;
+          }
+          return sum + bucket.limit;
+        }, 0);
+
+        const diff = totalCash - totalBudgeted;
+        const isOverAllocated = diff < -1; // Tolerance
+
+        return (
+          <div
+            className={`p-4 rounded-xl border ${
+              isOverAllocated
+                ? "bg-red-50 border-red-100"
+                : "bg-teal-50 border-teal-100"
+            }`}
+          >
+            <div className="flex items-start gap-3">
+              <div
+                className={`p-2 rounded-full ${
+                  isOverAllocated
+                    ? "bg-red-100 text-red-600"
+                    : "bg-teal-100 text-teal-600"
+                }`}
+              >
+                <AlertTriangle size={20} />
+              </div>
+              <div className="flex-1">
+                <div className="flex justify-between items-center">
+                  <h3
+                    className={`font-bold ${
+                      isOverAllocated ? "text-red-800" : "text-teal-800"
+                    }`}
+                  >
+                    {isOverAllocated
+                      ? "Over-Allocated (Panic!)"
+                      : "Budget is Safe"}
+                  </h3>
+                  <span
+                    className={`text-xs font-bold px-2 py-1 rounded-full ${
+                      isOverAllocated
+                        ? "bg-red-200 text-red-700"
+                        : "bg-teal-200 text-teal-700"
+                    }`}
+                  >
+                    {isOverAllocated ? formatCurrency(diff) : "Liquid"}
+                  </span>
+                </div>
+
+                <p
+                  className={`text-sm mt-1 ${
+                    isOverAllocated ? "text-red-600" : "text-teal-600"
+                  }`}
+                >
+                  Total Real Money: <strong>{formatCurrency(totalCash)}</strong>
+                  <span className="mx-2">vs</span>
+                  Total Budgeted:{" "}
+                  <strong>{formatCurrency(totalBudgeted)}</strong>
+                </p>
+
+                {isOverAllocated && (
+                  <p className="text-xs mt-2 font-medium opacity-90 text-red-600">
+                    Warning: You have budgeted more money than you actually
+                    have. Reduce bucket limits immediately.
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {buckets.map((bucket) => {
