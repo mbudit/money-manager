@@ -4,7 +4,7 @@ import { TransactionList } from "../components/Transactions/TransactionList";
 import { Wallet, ArrowUp, ArrowDown } from "lucide-react";
 
 export function Dashboard() {
-  const { accounts, transactions, categories } = useMoney();
+  const { accounts, transactions, categories, buckets } = useMoney();
 
   const totalBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0);
 
@@ -97,6 +97,7 @@ export function Dashboard() {
           transactions={recentTransactions}
           accounts={accounts}
           categories={categories}
+          buckets={buckets}
         />
       </div>
     </div>

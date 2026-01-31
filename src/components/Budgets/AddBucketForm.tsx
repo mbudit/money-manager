@@ -1,10 +1,16 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Wallet, Utensils, Armchair, CalendarDays } from "lucide-react";
 import { useMoney } from "@/context/MoneyContext";
 import type { Bucket } from "@/types";
 
-export function AddBucketForm({ onClose }: { onClose: () => void }) {
-  const { addBucket, categories } = useMoney();
+interface AddBucketFormProps {
+  onClose: () => void;
+  editingBucket?: Bucket;
+}
+
+export function AddBucketForm({ onClose, editingBucket }: AddBucketFormProps) {
+  const { addBucket, updateBucket, categories } = useMoney();
+  const isEditMode = !!editingBucket;
 
   // Type: 'standard' | 'meal-tracker' | 'weekend-flex'
   const [bucketType, setBucketType] = useState<
@@ -17,6 +23,28 @@ export function AddBucketForm({ onClose }: { onClose: () => void }) {
   const [color, setColor] = useState("#10B981");
   const [period, setPeriod] = useState<Bucket["period"]>("monthly");
   const [constraint, setConstraint] = useState<Bucket["constraint"]>("all");
+
+  // Populate form when editing
+  useEffect(() => {
+    if (editingBucket) {
+      setName(editingBucket.name);
+      setLimit(editingBucket.limit.toString());
+      setSelectedCategories(editingBucket.categoryIds || []);
+      setColor(editingBucket.color);
+      setPeriod(editingBucket.period || "monthly");
+      setConstraint(editingBucket.constraint || "all");
+
+      // Determine bucket type from properties
+      if (editingBucket.isMealTracker) {
+        setBucketType("meal-tracker");
+      } else if (editingBucket.constraint === "weekends") {
+        setBucketType("weekend-flex");
+      } else {
+        setBucketType("standard");
+      }
+    }
+  }, [editingBucket]);
+
   // Calculate actual workdays in current month
   const workdayCount = useMemo(() => {
     const now = new Date();
@@ -39,42 +67,42 @@ export function AddBucketForm({ onClose }: { onClose: () => void }) {
   ) => {
     setBucketType(type);
     if (type === "meal-tracker") {
-      setName("Workday Lunch");
+      if (!isEditMode) setName("Workday Lunch");
       setConstraint("workdays");
       setPeriod("monthly");
       setColor("#F97316"); // Orange
     } else if (type === "weekend-flex") {
-      setName("Weekend Fun");
+      if (!isEditMode) setName("Weekend Fun");
       setConstraint("weekends");
       setPeriod("monthly");
       setColor("#8B5CF6"); // Purple
     } else {
-      setName("");
+      if (!isEditMode) setName("");
       setConstraint("all");
       setPeriod("monthly");
       setColor("#10B981"); // Teal
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    addBucket({
+
+    const bucketData = {
       name,
       limit: parseFloat(limit) || 0,
       categoryIds: selectedCategories,
       color,
       period,
       constraint,
-      rollover: false,
+      rollover: editingBucket?.rollover || false,
       isMealTracker: bucketType === "meal-tracker",
-      // Ensure other required fields for Bucket creation are present if addBucket expects a full Bucket object excluding ID
-      // Assuming addBucket handles ID and defaults.
-      spent: 0, // Default if required by local state before sync?
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    } as any); // Type assertion if addBucket signature differs slightly, but matching usage in Budgets.tsx
-    // Checking Budgets.tsx usage: addBucket({...}) lines 290-299. It seems addBucket takes Omit<Bucket, 'id'> or similar.
-    // I'll stick to exactly what was in Budgets.tsx
+    };
+
+    if (isEditMode && editingBucket) {
+      await updateBucket(editingBucket.id, bucketData);
+    } else {
+      await addBucket(bucketData as any);
+    }
     onClose();
   };
 
@@ -101,11 +129,10 @@ export function AddBucketForm({ onClose }: { onClose: () => void }) {
                 type.id as "standard" | "meal-tracker" | "weekend-flex",
               )
             }
-            className={`flex flex-col items-center justify-center p-2 rounded-lg border-2 transition-all ${
-              bucketType === type.id
+            className={`flex flex-col items-center justify-center p-2 rounded-lg border-2 transition-all ${bucketType === type.id
                 ? "border-teal-500 bg-teal-50 text-teal-700"
                 : "border-gray-100 bg-white text-gray-500 hover:bg-gray-50"
-            }`}
+              }`}
           >
             <type.icon size={20} className="mb-1" />
             <span className="text-[10px] font-bold uppercase text-center leading-tight">
@@ -262,7 +289,7 @@ export function AddBucketForm({ onClose }: { onClose: () => void }) {
           type="submit"
           className="flex-1 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 font-medium"
         >
-          Create Bucket
+          {isEditMode ? "Save Changes" : "Create Bucket"}
         </button>
       </div>
     </form>

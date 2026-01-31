@@ -1,15 +1,29 @@
-import { useMemo } from "react";
-import { Utensils } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Utensils, ChevronDown, ChevronUp, ArrowDownLeft } from "lucide-react";
 import { useMoney } from "@/context/MoneyContext";
 import type { Bucket } from "@/types";
+import { format } from "date-fns";
 
 interface MealTrackerCardProps {
   bucket: Bucket;
+  onEdit: (bucket: Bucket) => void;
   onDelete: (id: string) => void;
 }
 
-export function MealTrackerCard({ bucket, onDelete }: MealTrackerCardProps) {
-  const { transactions } = useMoney();
+export function MealTrackerCard({ bucket, onEdit, onDelete }: MealTrackerCardProps) {
+  const { transactions, categories, accounts } = useMoney();
+  const [showTransactions, setShowTransactions] = useState(false);
+
+  // Get all transactions for this bucket
+  const bucketTransactions = transactions
+    .filter((t) => t.bucketId === bucket.id && t.type === "expense")
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  const getCategoryName = (id?: string) =>
+    categories.find((c) => c.id === id)?.name || "Uncategorized";
+
+  const getAccountName = (id: string) =>
+    accounts.find((a) => a.id === id)?.name || "Unknown";
 
   const trackerData = useMemo(() => {
     const now = new Date();
@@ -35,14 +49,14 @@ export function MealTrackerCard({ bucket, onDelete }: MealTrackerCardProps) {
     const todayStart = new Date(currentYear, currentMonth, currentDay);
     todayStart.setHours(0, 0, 0, 0);
 
-    // We only care about transactions that match the bucket's categories
+    // We only care about transactions that match the bucket's ID
     // AND happen TODAY.
     const spentToday = transactions
       .filter((t) => {
         const tDate = new Date(t.date);
         return (
           t.type === "expense" &&
-          bucket.categoryIds.includes(t.categoryId || "") &&
+          t.bucketId === bucket.id &&
           tDate.getDate() === currentDay &&
           tDate.getMonth() === currentMonth &&
           tDate.getFullYear() === currentYear
@@ -68,7 +82,7 @@ export function MealTrackerCard({ bucket, onDelete }: MealTrackerCardProps) {
           const tDate = new Date(t.date);
           return (
             t.type === "expense" &&
-            bucket.categoryIds.includes(t.categoryId || "") &&
+            t.bucketId === bucket.id &&
             tDate.getDate() === day &&
             tDate.getMonth() === currentMonth &&
             tDate.getFullYear() === currentYear
@@ -109,7 +123,13 @@ export function MealTrackerCard({ bucket, onDelete }: MealTrackerCardProps) {
         <Utensils size={120} />
       </div>
 
-      <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+      <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity z-20 flex gap-2">
+        <button
+          onClick={() => onEdit(bucket)}
+          className="text-orange-400 hover:text-teal-600 text-xs font-medium bg-white/50 px-2 py-1 rounded"
+        >
+          Edit
+        </button>
         <button
           onClick={() => {
             if (confirm("Delete this tracker?")) onDelete(bucket.id);
@@ -171,7 +191,7 @@ export function MealTrackerCard({ bucket, onDelete }: MealTrackerCardProps) {
         </div>
       </div>
 
-      <div className="mt-4 pt-3 border-t border-orange-100">
+      <div className="mt-4 pt-3 border-t border-orange-100 relative z-10">
         <p className="text-[10px] text-gray-400 mb-2 uppercase tracking-wider font-bold">
           Monthly Overview
         </p>
@@ -179,22 +199,80 @@ export function MealTrackerCard({ bucket, onDelete }: MealTrackerCardProps) {
           {trackerData.gridData.map((dayData) => (
             <div
               key={dayData.day}
-              title={`Day ${dayData.day}: ${formatCurrency(dayData.spent)} ${
-                !dayData.isWorkday ? "(Weekend)" : ""
-              }`}
-              className={`w-3 h-3 rounded-sm transition-all ${
-                dayData.status === "full"
-                  ? "bg-red-500"
-                  : dayData.status === "partial"
-                    ? "bg-orange-400"
-                    : dayData.isWorkday
-                      ? "bg-gray-200"
-                      : "bg-gray-100 border border-gray-200" // Lighter for weekends
-              }`}
+              title={`Day ${dayData.day}: ${formatCurrency(dayData.spent)} ${!dayData.isWorkday ? "(Weekend)" : ""
+                }`}
+              className={`w-3 h-3 rounded-sm transition-all ${dayData.status === "full"
+                ? "bg-red-500"
+                : dayData.status === "partial"
+                  ? "bg-orange-400"
+                  : dayData.isWorkday
+                    ? "bg-gray-200"
+                    : "bg-gray-100 border border-gray-200" // Lighter for weekends
+                }`}
             />
           ))}
         </div>
       </div>
+
+      {/* View Transactions Toggle */}
+      <button
+        onClick={() => setShowTransactions(!showTransactions)}
+        className="mt-4 w-full flex items-center justify-center gap-2 py-2 text-sm font-medium text-orange-600 hover:text-orange-700 hover:bg-orange-100/50 rounded-lg transition-colors relative z-10"
+      >
+        {showTransactions ? (
+          <>
+            <ChevronUp size={16} />
+            Hide Transactions
+          </>
+        ) : (
+          <>
+            <ChevronDown size={16} />
+            View Transactions ({bucketTransactions.length})
+          </>
+        )}
+      </button>
+
+      {/* Transactions List */}
+      {showTransactions && (
+        <div className="mt-3 border-t border-orange-100 pt-3 relative z-10">
+          {bucketTransactions.length === 0 ? (
+            <p className="text-sm text-gray-400 text-center py-4">
+              No transactions in this bucket yet
+            </p>
+          ) : (
+            <div className="space-y-2 max-h-64 overflow-y-auto">
+              {bucketTransactions.map((tx) => (
+                <div
+                  key={tx.id}
+                  className="flex items-center justify-between py-2 px-3 bg-white/60 rounded-lg"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center shrink-0">
+                      <ArrowDownLeft size={14} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-gray-800">
+                        {getCategoryName(tx.categoryId)}
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        {format(new Date(tx.date), "dd MMM yyyy")} · {getAccountName(tx.accountId)}
+                      </p>
+                      {tx.note && (
+                        <p className="text-xs text-gray-500 truncate mt-0.5">
+                          {tx.note}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <span className="text-sm font-bold text-orange-600">
+                    -{formatCurrency(tx.amount)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

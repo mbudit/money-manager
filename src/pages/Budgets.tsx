@@ -11,10 +11,21 @@ export function Budgets() {
   const { buckets, categories, transactions, accounts, deleteBucket } =
     useMoney();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingBucket, setEditingBucket] = useState<Bucket | undefined>(undefined);
 
-  // Helper to calculate spent amount for a bucket based on its categories and period constraints
+  const handleEdit = (bucket: Bucket) => {
+    setEditingBucket(bucket);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setEditingBucket(undefined);
+  };
+
+  // Helper to calculate spent amount for a bucket based on its ID and period constraints
   const getBucketSpent = (
-    bucketCategoryIds: string[],
+    bucketId: string,
     period: Bucket["period"],
     constraint: Bucket["constraint"],
   ) => {
@@ -31,6 +42,9 @@ export function Budgets() {
 
     return transactions
       .filter((t) => {
+        // Must be explicitly linked to this bucket
+        if (t.bucketId !== bucketId) return false;
+
         const tDate = new Date(t.date);
 
         // 1. Check Period
@@ -57,12 +71,7 @@ export function Budgets() {
           isConstraintMatch = tDay === 0 || tDay === 6;
         }
 
-        return (
-          t.type === "expense" &&
-          bucketCategoryIds.includes(t.categoryId || "") &&
-          isPeriodMatch &&
-          isConstraintMatch
-        );
+        return t.type === "expense" && isPeriodMatch && isConstraintMatch;
       })
       .reduce((sum, t) => sum + t.amount, 0);
   };
@@ -105,48 +114,43 @@ export function Budgets() {
 
         return (
           <div
-            className={`p-4 rounded-xl border ${
-              isOverAllocated
-                ? "bg-red-50 border-red-100"
-                : "bg-teal-50 border-teal-100"
-            }`}
+            className={`p-4 rounded-xl border ${isOverAllocated
+              ? "bg-red-50 border-red-100"
+              : "bg-teal-50 border-teal-100"
+              }`}
           >
             <div className="flex items-start gap-3">
               <div
-                className={`p-2 rounded-full ${
-                  isOverAllocated
-                    ? "bg-red-100 text-red-600"
-                    : "bg-teal-100 text-teal-600"
-                }`}
+                className={`p-2 rounded-full ${isOverAllocated
+                  ? "bg-red-100 text-red-600"
+                  : "bg-teal-100 text-teal-600"
+                  }`}
               >
                 <AlertTriangle size={20} />
               </div>
               <div className="flex-1">
                 <div className="flex justify-between items-center">
                   <h3
-                    className={`font-bold ${
-                      isOverAllocated ? "text-red-800" : "text-teal-800"
-                    }`}
+                    className={`font-bold ${isOverAllocated ? "text-red-800" : "text-teal-800"
+                      }`}
                   >
                     {isOverAllocated
                       ? "Over-Allocated (Panic!)"
                       : "Budget is Safe"}
                   </h3>
                   <span
-                    className={`text-xs font-bold px-2 py-1 rounded-full ${
-                      isOverAllocated
-                        ? "bg-red-200 text-red-700"
-                        : "bg-teal-200 text-teal-700"
-                    }`}
+                    className={`text-xs font-bold px-2 py-1 rounded-full ${isOverAllocated
+                      ? "bg-red-200 text-red-700"
+                      : "bg-teal-200 text-teal-700"
+                      }`}
                   >
                     {isOverAllocated ? formatCurrency(diff) : "Liquid"}
                   </span>
                 </div>
 
                 <p
-                  className={`text-sm mt-1 ${
-                    isOverAllocated ? "text-red-600" : "text-teal-600"
-                  }`}
+                  className={`text-sm mt-1 ${isOverAllocated ? "text-red-600" : "text-teal-600"
+                    }`}
                 >
                   Total Real Money: <strong>{formatCurrency(totalCash)}</strong>
                   <span className="mx-2">vs</span>
@@ -173,13 +177,14 @@ export function Budgets() {
               <MealTrackerCard
                 key={bucket.id}
                 bucket={bucket}
+                onEdit={handleEdit}
                 onDelete={deleteBucket}
               />
             );
           }
 
           const spent = getBucketSpent(
-            bucket.categoryIds,
+            bucket.id,
             bucket.period || "monthly",
             bucket.constraint || "all",
           );
@@ -190,6 +195,9 @@ export function Budgets() {
               bucket={bucket}
               spent={spent}
               categories={categories}
+              transactions={transactions}
+              accounts={accounts}
+              onEdit={handleEdit}
               onDelete={deleteBucket}
               formatCurrency={formatCurrency}
             />
@@ -208,10 +216,10 @@ export function Budgets() {
 
       <Modal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title="Create New Bucket"
+        onClose={handleCloseModal}
+        title={editingBucket ? "Edit Bucket" : "Create New Bucket"}
       >
-        <AddBucketForm onClose={() => setIsModalOpen(false)} />
+        <AddBucketForm onClose={handleCloseModal} editingBucket={editingBucket} />
       </Modal>
     </div>
   );

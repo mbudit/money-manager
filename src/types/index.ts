@@ -21,6 +21,7 @@ export interface Transaction {
   amount: number;
   type: TransactionType;
   categoryId?: string; // Optional for transfers
+  bucketId?: string; // Optional: links transaction to a specific budget bucket
   accountId: string;
   toAccountId?: string; // For transfers
   date: string; // ISO string

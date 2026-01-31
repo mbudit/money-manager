@@ -9,13 +9,14 @@ import {
   ChevronUp,
   ChevronDown,
 } from "lucide-react";
-import type { Transaction, Account, Category } from "../../types";
+import type { Transaction, Account, Category, Bucket } from "../../types";
 import { format } from "date-fns";
 
 interface TransactionListProps {
   transactions: Transaction[];
   accounts: Account[];
   categories: Category[];
+  buckets?: Bucket[];
   onEdit?: (transaction: Transaction) => void;
   onDelete?: (id: string) => void;
 }
@@ -27,6 +28,7 @@ export function TransactionList({
   transactions,
   accounts,
   categories,
+  buckets = [],
   onEdit,
   onDelete,
 }: TransactionListProps) {
@@ -36,6 +38,10 @@ export function TransactionList({
   const getAccountName = (id: string) =>
     accounts.find((a) => a.id === id)?.name || "Unknown Account";
   const getCategory = (id?: string) => categories.find((c) => c.id === id);
+  const getBucketName = (id?: string) => {
+    if (!id) return "No Bucket";
+    return buckets.find((b) => b.id === id)?.name || "No Bucket";
+  };
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -144,6 +150,9 @@ export function TransactionList({
                   <SortIcon field="amount" />
                 </div>
               </th>
+              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                Bucket
+              </th>
               {(onEdit || onDelete) && (
                 <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">
                   Actions
@@ -220,6 +229,16 @@ export function TransactionList({
                       style: "currency",
                       currency: "IDR",
                     }).format(transaction.amount)}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-center">
+                    <span
+                      className={`inline-flex items-center justify-center px-2 py-1 rounded-full text-xs font-medium ${transaction.bucketId
+                        ? "bg-blue-100 text-blue-700"
+                        : "bg-gray-100 text-gray-500"
+                        }`}
+                    >
+                      {getBucketName(transaction.bucketId)}
+                    </span>
                   </td>
                   {(onEdit || onDelete) && (
                     <td className="px-6 py-4 text-right">

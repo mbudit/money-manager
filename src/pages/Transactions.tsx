@@ -6,7 +6,7 @@ import { AddTransactionModal } from "../components/Transactions/AddTransactionMo
 import type { Transaction } from "../types";
 
 export function Transactions() {
-  const { transactions, accounts, categories, deleteTransaction } = useMoney();
+  const { transactions, accounts, categories, buckets, deleteTransaction } = useMoney();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | undefined>(undefined);
   const [searchQuery, setSearchQuery] = useState("");
@@ -42,6 +42,14 @@ export function Transactions() {
         if (toAccount?.name.toLowerCase().includes(query)) return true;
       }
 
+      // Search by bucket name
+      if (tx.bucketId) {
+        const bucket = buckets.find((b) => b.id === tx.bucketId);
+        if (bucket?.name.toLowerCase().includes(query)) return true;
+      }
+      // Also match "no bucket" search
+      if (!tx.bucketId && "no bucket".includes(query)) return true;
+
       // Search by note
       if (tx.note?.toLowerCase().includes(query)) return true;
 
@@ -53,7 +61,7 @@ export function Transactions() {
 
       return false;
     });
-  }, [transactions, searchQuery, categories, accounts]);
+  }, [transactions, searchQuery, categories, accounts, buckets]);
 
   return (
     <div className="space-y-6">
@@ -99,6 +107,7 @@ export function Transactions() {
         transactions={filteredTransactions}
         accounts={accounts}
         categories={categories}
+        buckets={buckets}
         onEdit={handleEdit}
         onDelete={deleteTransaction}
       />

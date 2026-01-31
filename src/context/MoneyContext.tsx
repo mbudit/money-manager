@@ -529,9 +529,9 @@ const MoneyProviderInner = ({ children }: { children: ReactNode }) => {
         });
       }
 
-      // Update transaction document
+      // Update transaction document - filter out undefined AND empty strings
       const cleanData = Object.fromEntries(
-        Object.entries({ ...newData, id }).filter(([, v]) => v !== undefined),
+        Object.entries({ ...newData, id }).filter(([, v]) => v !== undefined && v !== ""),
       );
       transaction.set(txRef, cleanData);
     });

@@ -55,7 +55,7 @@ export function AddTransactionModal({
       setAccountId(transaction.accountId);
       setToAccountId(transaction.toAccountId || "");
       setNote(transaction.note || "");
-      setSelectedBucketId("");
+      setSelectedBucketId(transaction.bucketId || "");
       setIsRecurring(false); // Can't edit as recurring
     } else if (!isOpen) {
       // Reset form when modal closes
@@ -85,10 +85,11 @@ export function AddTransactionModal({
           amount: parseFloat(amount),
           type: activeTab,
           date,
-          categoryId: activeTab === "transfer" ? undefined : categoryId,
+          categoryId: activeTab === "transfer" ? undefined : (categoryId || undefined),
+          bucketId: activeTab === "expense" && selectedBucketId ? selectedBucketId : undefined,
           accountId,
           toAccountId: activeTab === "transfer" ? toAccountId : undefined,
-          note,
+          note: note || undefined,
         });
       } else if (isRecurring) {
         await addRecurringTransaction({
@@ -107,6 +108,7 @@ export function AddTransactionModal({
           type: activeTab,
           date,
           categoryId: activeTab === "transfer" ? undefined : categoryId,
+          bucketId: activeTab === "expense" && selectedBucketId ? selectedBucketId : undefined,
           accountId,
           toAccountId: activeTab === "transfer" ? toAccountId : undefined,
           note,
@@ -139,8 +141,8 @@ export function AddTransactionModal({
         <button
           onClick={() => setActiveTab("expense")}
           className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-md transition-all ${activeTab === "expense"
-              ? "bg-white text-red-600 shadow-sm"
-              : "text-gray-500 hover:text-gray-700"
+            ? "bg-white text-red-600 shadow-sm"
+            : "text-gray-500 hover:text-gray-700"
             }`}
         >
           <ArrowDownLeft size={16} /> Expense
@@ -148,8 +150,8 @@ export function AddTransactionModal({
         <button
           onClick={() => setActiveTab("income")}
           className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-md transition-all ${activeTab === "income"
-              ? "bg-white text-teal-600 shadow-sm"
-              : "text-gray-500 hover:text-gray-700"
+            ? "bg-white text-teal-600 shadow-sm"
+            : "text-gray-500 hover:text-gray-700"
             }`}
         >
           <ArrowUpRight size={16} /> Income
@@ -157,8 +159,8 @@ export function AddTransactionModal({
         <button
           onClick={() => setActiveTab("transfer")}
           className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-md transition-all ${activeTab === "transfer"
-              ? "bg-white text-blue-600 shadow-sm"
-              : "text-gray-500 hover:text-gray-700"
+            ? "bg-white text-blue-600 shadow-sm"
+            : "text-gray-500 hover:text-gray-700"
             }`}
         >
           <ArrowRight size={16} /> Transfer
