@@ -1,13 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMoney } from "../../context/MoneyContext";
 import { Modal } from "../UI/Modal";
 import { ArrowDownLeft, ArrowUpRight, ArrowRight } from "lucide-react";
 import { format } from "date-fns";
-import type { RecurringTransaction } from "../../types";
+import type { RecurringTransaction, Transaction } from "../../types";
 
 interface AddTransactionModalProps {
   isOpen: boolean;
   onClose: () => void;
+  transaction?: Transaction; // Optional: for edit mode
 }
 
 type TabType = "expense" | "income" | "transfer";
@@ -15,12 +16,15 @@ type TabType = "expense" | "income" | "transfer";
 export function AddTransactionModal({
   isOpen,
   onClose,
+  transaction,
 }: AddTransactionModalProps) {
+  const isEditMode = !!transaction;
   const {
     accounts,
     categories,
     buckets,
     addTransaction,
+    updateTransaction,
     addRecurringTransaction,
   } = useMoney();
   const [activeTab, setActiveTab] = useState<TabType>("expense");
@@ -39,6 +43,34 @@ export function AddTransactionModal({
   const [frequency, setFrequency] =
     useState<RecurringTransaction["frequency"]>("monthly");
 
+  // Populate form when editing
+  useEffect(() => {
+    if (transaction && isOpen) {
+      setActiveTab(transaction.type);
+      setAmount(transaction.amount.toString());
+      // Format date for datetime-local input
+      const txDate = new Date(transaction.date);
+      setDate(format(txDate, "yyyy-MM-dd'T'HH:mm"));
+      setCategoryId(transaction.categoryId || "");
+      setAccountId(transaction.accountId);
+      setToAccountId(transaction.toAccountId || "");
+      setNote(transaction.note || "");
+      setSelectedBucketId("");
+      setIsRecurring(false); // Can't edit as recurring
+    } else if (!isOpen) {
+      // Reset form when modal closes
+      setActiveTab("expense");
+      setAmount("");
+      setDate(format(new Date(), "yyyy-MM-dd'T'HH:mm"));
+      setCategoryId("");
+      setAccountId("");
+      setToAccountId("");
+      setNote("");
+      setSelectedBucketId("");
+      setIsRecurring(false);
+    }
+  }, [transaction, isOpen]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!amount || !accountId) return;
@@ -47,7 +79,18 @@ export function AddTransactionModal({
     if (activeTab === "transfer" && !toAccountId) return;
 
     try {
-      if (isRecurring) {
+      if (isEditMode && transaction) {
+        // Update existing transaction
+        await updateTransaction(transaction.id, {
+          amount: parseFloat(amount),
+          type: activeTab,
+          date,
+          categoryId: activeTab === "transfer" ? undefined : categoryId,
+          accountId,
+          toAccountId: activeTab === "transfer" ? toAccountId : undefined,
+          note,
+        });
+      } else if (isRecurring) {
         await addRecurringTransaction({
           amount: parseFloat(amount),
           type: activeTab,
@@ -70,13 +113,9 @@ export function AddTransactionModal({
         });
       }
 
-      // Reset and close
-      setAmount("");
-      setNote("");
-      setIsRecurring(false);
       onClose();
     } catch (error) {
-      console.error("Failed to add transaction:", error);
+      console.error("Failed to save transaction:", error);
       alert("Failed to save transaction. Please try again.");
     }
   };
@@ -95,57 +134,56 @@ export function AddTransactionModal({
   });
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Add Transaction">
+    <Modal isOpen={isOpen} onClose={onClose} title={isEditMode ? "Edit Transaction" : "Add Transaction"}>
       <div className="flex p-1 bg-gray-100 rounded-lg mb-6">
         <button
           onClick={() => setActiveTab("expense")}
-          className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-md transition-all ${
-            activeTab === "expense"
+          className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-md transition-all ${activeTab === "expense"
               ? "bg-white text-red-600 shadow-sm"
               : "text-gray-500 hover:text-gray-700"
-          }`}
+            }`}
         >
           <ArrowDownLeft size={16} /> Expense
         </button>
         <button
           onClick={() => setActiveTab("income")}
-          className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-md transition-all ${
-            activeTab === "income"
+          className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-md transition-all ${activeTab === "income"
               ? "bg-white text-teal-600 shadow-sm"
               : "text-gray-500 hover:text-gray-700"
-          }`}
+            }`}
         >
           <ArrowUpRight size={16} /> Income
         </button>
         <button
           onClick={() => setActiveTab("transfer")}
-          className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-md transition-all ${
-            activeTab === "transfer"
+          className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-md transition-all ${activeTab === "transfer"
               ? "bg-white text-blue-600 shadow-sm"
               : "text-gray-500 hover:text-gray-700"
-          }`}
+            }`}
         >
           <ArrowRight size={16} /> Transfer
         </button>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Recurring Toggle */}
-        <div className="flex items-center gap-2 mb-4 p-3 bg-gray-50 rounded-lg border border-gray-100">
-          <input
-            type="checkbox"
-            id="recurring"
-            checked={isRecurring}
-            onChange={(e) => setIsRecurring(e.target.checked)}
-            className="w-4 h-4 text-teal-600 rounded focus:ring-teal-500"
-          />
-          <label
-            htmlFor="recurring"
-            className="text-sm font-medium text-gray-700 select-none"
-          >
-            Repeat this transaction?
-          </label>
-        </div>
+        {/* Recurring Toggle - Hide in edit mode */}
+        {!isEditMode && (
+          <div className="flex items-center gap-2 mb-4 p-3 bg-gray-50 rounded-lg border border-gray-100">
+            <input
+              type="checkbox"
+              id="recurring"
+              checked={isRecurring}
+              onChange={(e) => setIsRecurring(e.target.checked)}
+              className="w-4 h-4 text-teal-600 rounded focus:ring-teal-500"
+            />
+            <label
+              htmlFor="recurring"
+              className="text-sm font-medium text-gray-700 select-none"
+            >
+              Repeat this transaction?
+            </label>
+          </div>
+        )}
 
         {isRecurring && (
           <div>
@@ -314,7 +352,7 @@ export function AddTransactionModal({
           type="submit"
           className="w-full py-3 bg-teal-600 text-white font-bold rounded-lg hover:bg-teal-700 transition-colors shadow-lg shadow-teal-600/20 mt-4"
         >
-          Save Transaction
+          {isEditMode ? "Update Transaction" : "Save Transaction"}
         </button>
       </form>
     </Modal>

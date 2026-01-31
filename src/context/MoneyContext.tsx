@@ -37,6 +37,10 @@ interface MoneyContextType {
   addCategory: (category: Omit<Category, "id">) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
   addTransaction: (transaction: Omit<Transaction, "id">) => Promise<void>;
+  updateTransaction: (
+    id: string,
+    data: Omit<Transaction, "id">,
+  ) => Promise<void>;
   addAccount: (account: Omit<Account, "id">) => Promise<void>;
   deleteTransaction: (id: string) => Promise<void>;
   updateAccountBalance: (id: string, amount: number) => Promise<void>;
@@ -397,6 +401,142 @@ const MoneyProviderInner = ({ children }: { children: ReactNode }) => {
     });
   };
 
+  const updateTransaction = async (
+    id: string,
+    newData: Omit<Transaction, "id">,
+  ) => {
+    if (!user) return;
+
+    await runTransaction(db, async (transaction) => {
+      // 1. Read old transaction
+      const txRef = doc(db, `users/${user.uid}/transactions`, id);
+      const txDoc = await transaction.get(txRef);
+      if (!txDoc.exists()) throw new Error("Transaction does not exist");
+      const oldData = txDoc.data() as Transaction;
+
+      // 2. Read all affected accounts
+      const oldAccountRef = doc(
+        db,
+        `users/${user.uid}/accounts`,
+        oldData.accountId,
+      );
+      const oldAccountDoc = await transaction.get(oldAccountRef);
+      if (!oldAccountDoc.exists()) throw new Error("Old account does not exist");
+
+      const newAccountRef = doc(
+        db,
+        `users/${user.uid}/accounts`,
+        newData.accountId,
+      );
+      const newAccountDoc =
+        newData.accountId === oldData.accountId
+          ? oldAccountDoc
+          : await transaction.get(newAccountRef);
+      if (!newAccountDoc.exists()) throw new Error("New account does not exist");
+
+      // Read old toAccount if transfer
+      let oldToAccountDoc;
+      let oldToAccountRef;
+      if (oldData.type === "transfer" && oldData.toAccountId) {
+        oldToAccountRef = doc(
+          db,
+          `users/${user.uid}/accounts`,
+          oldData.toAccountId,
+        );
+        oldToAccountDoc = await transaction.get(oldToAccountRef);
+      }
+
+      // Read new toAccount if transfer
+      let newToAccountDoc;
+      let newToAccountRef;
+      if (newData.type === "transfer" && newData.toAccountId) {
+        newToAccountRef = doc(
+          db,
+          `users/${user.uid}/accounts`,
+          newData.toAccountId,
+        );
+        newToAccountDoc = await transaction.get(newToAccountRef);
+        if (!newToAccountDoc.exists())
+          throw new Error("Target account does not exist");
+      }
+
+      // 3. Calculate balance changes
+      // Step A: Revert old transaction effect on old accounts
+      const accountBalances: Map<string, number> = new Map();
+
+      // Get initial balances
+      accountBalances.set(oldData.accountId, oldAccountDoc.data().balance);
+      if (newData.accountId !== oldData.accountId) {
+        accountBalances.set(newData.accountId, newAccountDoc.data().balance);
+      }
+      if (oldData.type === "transfer" && oldData.toAccountId && oldToAccountDoc?.exists()) {
+        accountBalances.set(oldData.toAccountId, oldToAccountDoc.data().balance);
+      }
+      if (newData.type === "transfer" && newData.toAccountId && newToAccountDoc?.exists()) {
+        if (!accountBalances.has(newData.toAccountId)) {
+          accountBalances.set(newData.toAccountId, newToAccountDoc.data().balance);
+        }
+      }
+
+      // Revert old transaction
+      let oldBal = accountBalances.get(oldData.accountId)!;
+      if (oldData.type === "expense") oldBal += oldData.amount;
+      else if (oldData.type === "income") oldBal -= oldData.amount;
+      else if (oldData.type === "transfer") oldBal += oldData.amount;
+      accountBalances.set(oldData.accountId, oldBal);
+
+      if (oldData.type === "transfer" && oldData.toAccountId) {
+        let oldToBal = accountBalances.get(oldData.toAccountId)!;
+        oldToBal -= oldData.amount;
+        accountBalances.set(oldData.toAccountId, oldToBal);
+      }
+
+      // Apply new transaction
+      let newBal = accountBalances.get(newData.accountId)!;
+      if (newData.type === "expense") newBal -= newData.amount;
+      else if (newData.type === "income") newBal += newData.amount;
+      else if (newData.type === "transfer") newBal -= newData.amount;
+      accountBalances.set(newData.accountId, newBal);
+
+      if (newData.type === "transfer" && newData.toAccountId) {
+        let newToBal = accountBalances.get(newData.toAccountId)!;
+        newToBal += newData.amount;
+        accountBalances.set(newData.toAccountId, newToBal);
+      }
+
+      // 4. Write updates
+      // Update account balances
+      transaction.update(oldAccountRef, {
+        balance: accountBalances.get(oldData.accountId),
+      });
+      if (newData.accountId !== oldData.accountId) {
+        transaction.update(newAccountRef, {
+          balance: accountBalances.get(newData.accountId),
+        });
+      }
+      if (oldData.type === "transfer" && oldToAccountRef) {
+        transaction.update(oldToAccountRef, {
+          balance: accountBalances.get(oldData.toAccountId!),
+        });
+      }
+      if (
+        newData.type === "transfer" &&
+        newToAccountRef &&
+        newData.toAccountId !== oldData.toAccountId
+      ) {
+        transaction.update(newToAccountRef, {
+          balance: accountBalances.get(newData.toAccountId!),
+        });
+      }
+
+      // Update transaction document
+      const cleanData = Object.fromEntries(
+        Object.entries({ ...newData, id }).filter(([, v]) => v !== undefined),
+      );
+      transaction.set(txRef, cleanData);
+    });
+  };
+
   const addAccount = async (accountData: Omit<Account, "id">) => {
     if (!user) return;
     await addDoc(collection(db, `users/${user.uid}/accounts`), accountData);
@@ -473,6 +613,7 @@ const MoneyProviderInner = ({ children }: { children: ReactNode }) => {
         addCategory,
         deleteCategory,
         addTransaction,
+        updateTransaction,
         addAccount,
         deleteTransaction,
         updateAccountBalance,

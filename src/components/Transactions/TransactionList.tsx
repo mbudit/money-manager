@@ -1,9 +1,13 @@
+import { useState, useMemo } from "react";
 import {
   ArrowDownLeft,
   ArrowUpRight,
   ArrowRight,
   Wallet,
   Trash2,
+  Pencil,
+  ChevronUp,
+  ChevronDown,
 } from "lucide-react";
 import type { Transaction, Account, Category } from "../../types";
 import { format } from "date-fns";
@@ -12,18 +16,75 @@ interface TransactionListProps {
   transactions: Transaction[];
   accounts: Account[];
   categories: Category[];
+  onEdit?: (transaction: Transaction) => void;
   onDelete?: (id: string) => void;
 }
+
+type SortField = "date" | "category" | "account" | "amount";
+type SortDirection = "asc" | "desc";
 
 export function TransactionList({
   transactions,
   accounts,
   categories,
+  onEdit,
   onDelete,
 }: TransactionListProps) {
+  const [sortField, setSortField] = useState<SortField>("date");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+
   const getAccountName = (id: string) =>
     accounts.find((a) => a.id === id)?.name || "Unknown Account";
   const getCategory = (id?: string) => categories.find((c) => c.id === id);
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDirection(field === "date" ? "desc" : "asc");
+    }
+  };
+
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) {
+      return <ChevronUp size={14} className="opacity-0 group-hover:opacity-30" />;
+    }
+    return sortDirection === "asc" ? (
+      <ChevronUp size={14} className="text-teal-600" />
+    ) : (
+      <ChevronDown size={14} className="text-teal-600" />
+    );
+  };
+
+  const sortedTransactions = useMemo(() => {
+    return [...transactions].sort((a, b) => {
+      let comparison = 0;
+
+      switch (sortField) {
+        case "date":
+          comparison = new Date(a.date).getTime() - new Date(b.date).getTime();
+          break;
+        case "category": {
+          const catA = getCategory(a.categoryId)?.name || (a.type === "transfer" ? "Transfer" : "Uncategorized");
+          const catB = getCategory(b.categoryId)?.name || (b.type === "transfer" ? "Transfer" : "Uncategorized");
+          comparison = catA.localeCompare(catB);
+          break;
+        }
+        case "account": {
+          const accA = getAccountName(a.accountId);
+          const accB = getAccountName(b.accountId);
+          comparison = accA.localeCompare(accB);
+          break;
+        }
+        case "amount":
+          comparison = a.amount - b.amount;
+          break;
+      }
+
+      return sortDirection === "asc" ? comparison : -comparison;
+    });
+  }, [transactions, sortField, sortDirection, accounts, categories]);
 
   if (transactions.length === 0) {
     return (
@@ -47,19 +108,43 @@ export function TransactionList({
         <table className="w-full text-left">
           <thead className="bg-gray-50 border-b border-gray-100">
             <tr>
-              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                Date & Time
+              <th
+                onClick={() => handleSort("date")}
+                className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors group select-none"
+              >
+                <div className="flex items-center gap-1">
+                  Date & Time
+                  <SortIcon field="date" />
+                </div>
               </th>
-              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                Category / Note
+              <th
+                onClick={() => handleSort("category")}
+                className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors group select-none"
+              >
+                <div className="flex items-center gap-1">
+                  Category / Note
+                  <SortIcon field="category" />
+                </div>
               </th>
-              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                Account
+              <th
+                onClick={() => handleSort("account")}
+                className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors group select-none"
+              >
+                <div className="flex items-center gap-1">
+                  Account
+                  <SortIcon field="account" />
+                </div>
               </th>
-              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">
-                Amount
+              <th
+                onClick={() => handleSort("amount")}
+                className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right cursor-pointer hover:bg-gray-100 transition-colors group select-none"
+              >
+                <div className="flex items-center justify-end gap-1">
+                  Amount
+                  <SortIcon field="amount" />
+                </div>
               </th>
-              {onDelete && (
+              {(onEdit || onDelete) && (
                 <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">
                   Actions
                 </th>
@@ -67,7 +152,7 @@ export function TransactionList({
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {transactions.map((transaction) => {
+            {sortedTransactions.map((transaction) => {
               const category = getCategory(transaction.categoryId);
               const isExpense = transaction.type === "expense";
               const isIncome = transaction.type === "income";
@@ -123,13 +208,12 @@ export function TransactionList({
                     )}
                   </td>
                   <td
-                    className={`px-6 py-4 text-sm font-bold text-right whitespace-nowrap ${
-                      isExpense
-                        ? "text-red-600"
-                        : isIncome
-                          ? "text-teal-600"
-                          : "text-gray-900"
-                    }`}
+                    className={`px-6 py-4 text-sm font-bold text-right whitespace-nowrap ${isExpense
+                      ? "text-red-600"
+                      : isIncome
+                        ? "text-teal-600"
+                        : "text-gray-900"
+                      }`}
                   >
                     {isExpense ? "-" : isIncome ? "+" : ""}
                     {new Intl.NumberFormat("id-ID", {
@@ -137,23 +221,36 @@ export function TransactionList({
                       currency: "IDR",
                     }).format(transaction.amount)}
                   </td>
-                  {onDelete && (
+                  {(onEdit || onDelete) && (
                     <td className="px-6 py-4 text-right">
-                      <button
-                        onClick={() => {
-                          if (
-                            window.confirm(
-                              "Are you sure you want to delete this transaction?",
-                            )
-                          ) {
-                            onDelete(transaction.id);
-                          }
-                        }}
-                        className="text-gray-400 hover:text-red-500 transition-colors p-2 hover:bg-red-50 rounded-full"
-                        title="Delete Transaction"
-                      >
-                        <Trash2 size={18} />
-                      </button>
+                      <div className="flex items-center justify-end gap-1">
+                        {onEdit && (
+                          <button
+                            onClick={() => onEdit(transaction)}
+                            className="text-gray-400 hover:text-teal-600 transition-colors p-2 hover:bg-teal-50 rounded-full"
+                            title="Edit Transaction"
+                          >
+                            <Pencil size={18} />
+                          </button>
+                        )}
+                        {onDelete && (
+                          <button
+                            onClick={() => {
+                              if (
+                                window.confirm(
+                                  "Are you sure you want to delete this transaction?",
+                                )
+                              ) {
+                                onDelete(transaction.id);
+                              }
+                            }}
+                            className="text-gray-400 hover:text-red-500 transition-colors p-2 hover:bg-red-50 rounded-full"
+                            title="Delete Transaction"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        )}
+                      </div>
                     </td>
                   )}
                 </tr>
