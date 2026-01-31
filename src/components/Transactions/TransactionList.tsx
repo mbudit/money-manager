@@ -150,7 +150,7 @@ export function TransactionList({
                   <SortIcon field="amount" />
                 </div>
               </th>
-              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">
                 Bucket
               </th>
               {(onEdit || onDelete) && (
