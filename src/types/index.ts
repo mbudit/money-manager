@@ -53,4 +53,5 @@ export interface Bucket {
   constraint: "all" | "workdays" | "weekends";
   rollover: boolean;
   isMealTracker?: boolean;
+  targetAccountId?: string; // Optional: specific account to check liquidity against
 }

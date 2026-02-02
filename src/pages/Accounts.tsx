@@ -1,13 +1,17 @@
-import { Plus, Trash2, Pencil } from "lucide-react";
+import { Plus, Trash2, Pencil, ArrowRightLeft } from "lucide-react";
 import { useMoney } from "../context/MoneyContext";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Modal } from "../components/UI/Modal";
 import type { Account } from "../types";
+import { TransactionList } from "../components/Transactions/TransactionList";
 
 export function Accounts() {
-  const { accounts, deleteAccount } = useMoney();
+  const { accounts, deleteAccount, transactions, categories, buckets } =
+    useMoney();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
+  const [viewingTransactionsAccount, setViewingTransactionsAccount] =
+    useState<Account | null>(null);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("id-ID", {
@@ -26,6 +30,15 @@ export function Accounts() {
     setEditingAccount(null);
     setIsModalOpen(true);
   };
+
+  const filteredTransactions = useMemo(() => {
+    if (!viewingTransactionsAccount) return [];
+    return transactions.filter(
+      (t) =>
+        t.accountId === viewingTransactionsAccount.id ||
+        t.toAccountId === viewingTransactionsAccount.id,
+    );
+  }, [transactions, viewingTransactionsAccount]);
 
   return (
     <div className="space-y-6">
@@ -69,6 +82,13 @@ export function Accounts() {
                     {account.name.charAt(0)}
                   </div>
                   <div className="flex gap-1">
+                    <button
+                      onClick={() => setViewingTransactionsAccount(account)}
+                      className="p-1.5 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors"
+                      title="View Transactions"
+                    >
+                      <ArrowRightLeft size={16} />
+                    </button>
                     <button
                       onClick={() => handleEdit(account)}
                       className="p-1.5 text-blue-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
@@ -116,6 +136,31 @@ export function Accounts() {
           initialData={editingAccount || undefined}
         />
       </Modal>
+
+      {/* Transactions Modal */}
+      {viewingTransactionsAccount && (
+        <Modal
+          isOpen={!!viewingTransactionsAccount}
+          onClose={() => setViewingTransactionsAccount(null)}
+          title={`Transactions - ${viewingTransactionsAccount.name}`}
+          maxWidth="max-w-4xl"
+          // Add a size prop if Modal supports it, otherwise it might be small.
+          // Assuming Modal is flexible or I might need to adjust it later.
+          // Based on previous analysis, Modal seems standard.
+        >
+          <div className="max-h-[70vh] overflow-y-auto -mx-6 px-6">
+            <TransactionList
+              transactions={filteredTransactions}
+              accounts={accounts}
+              categories={categories}
+              buckets={buckets}
+              // Read-only view for now as per plan, or can pass empty handlers if needed?
+              // The TransactionList checks `if (onEdit || onDelete)` to show actions.
+              // Let's keep it read-only for now to avoid complexity with modals on top of modals.
+            />
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

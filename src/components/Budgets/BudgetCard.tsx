@@ -1,5 +1,11 @@
 import { useState } from "react";
-import { Wallet, AlertCircle, ChevronDown, ChevronUp, ArrowDownLeft } from "lucide-react";
+import {
+  Wallet,
+  AlertCircle,
+  ChevronDown,
+  ChevronUp,
+  ArrowDownLeft,
+} from "lucide-react";
 import type { Bucket, Category, Transaction, Account } from "@/types";
 import { format } from "date-fns";
 
@@ -117,8 +123,9 @@ export function BudgetCard({
 
         <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
           <div
-            className={`h-full rounded-full transition-all duration-500 ${isOverBudget ? "bg-red-500" : "bg-teal-500"
-              }`}
+            className={`h-full rounded-full transition-all duration-500 ${
+              isOverBudget ? "bg-red-500" : "bg-teal-500"
+            }`}
             style={{ width: `${percentage}%` }}
           />
         </div>
@@ -129,6 +136,42 @@ export function BudgetCard({
             Over budget by {formatCurrency(spent - bucket.limit)}
           </p>
         )}
+
+        {/* Bucket Liquidity Check */}
+        {(() => {
+          if (!bucket.targetAccountId) return null;
+          const account = accounts.find((a) => a.id === bucket.targetAccountId);
+          if (!account) return null;
+
+          const isLiquid = account.balance >= bucket.limit;
+
+          return (
+            <div
+              className={`mt-3 p-3 rounded-lg border ${
+                isLiquid
+                  ? "bg-blue-50 border-blue-100 text-blue-800"
+                  : "bg-red-50 border-red-100 text-red-800"
+              }`}
+            >
+              <div className="flex justify-between items-center text-xs mb-1">
+                <span className="font-bold flex items-center gap-1">
+                  {isLiquid ? "Liquidity Covered" : "Liquidity Warning"}
+                  {!isLiquid && <AlertCircle size={12} />}
+                </span>
+                <span className="opacity-75">{account.name}</span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <span>
+                  Account: <strong>{formatCurrency(account.balance)}</strong>
+                </span>
+                <span className="mx-1 opacity-40">/</span>
+                <span>
+                  Limit: <strong>{formatCurrency(bucket.limit)}</strong>
+                </span>
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
       {/* View Transactions Toggle */}
@@ -172,7 +215,8 @@ export function BudgetCard({
                         {getCategoryName(tx.categoryId)}
                       </p>
                       <p className="text-xs text-gray-400">
-                        {format(new Date(tx.date), "dd MMM yyyy")} · {getAccountName(tx.accountId)}
+                        {format(new Date(tx.date), "dd MMM yyyy")} ·{" "}
+                        {getAccountName(tx.accountId)}
                       </p>
                       {tx.note && (
                         <p className="text-xs text-gray-500 truncate mt-0.5">

@@ -1,5 +1,11 @@
 import { useMemo, useState } from "react";
-import { Utensils, ChevronDown, ChevronUp, ArrowDownLeft } from "lucide-react";
+import {
+  Utensils,
+  ChevronDown,
+  ChevronUp,
+  ArrowDownLeft,
+  AlertCircle,
+} from "lucide-react";
 import { useMoney } from "@/context/MoneyContext";
 import type { Bucket } from "@/types";
 import { format } from "date-fns";
@@ -10,7 +16,11 @@ interface MealTrackerCardProps {
   onDelete: (id: string) => void;
 }
 
-export function MealTrackerCard({ bucket, onEdit, onDelete }: MealTrackerCardProps) {
+export function MealTrackerCard({
+  bucket,
+  onEdit,
+  onDelete,
+}: MealTrackerCardProps) {
   const { transactions, categories, accounts } = useMoney();
   const [showTransactions, setShowTransactions] = useState(false);
 
@@ -199,20 +209,59 @@ export function MealTrackerCard({ bucket, onEdit, onDelete }: MealTrackerCardPro
           {trackerData.gridData.map((dayData) => (
             <div
               key={dayData.day}
-              title={`Day ${dayData.day}: ${formatCurrency(dayData.spent)} ${!dayData.isWorkday ? "(Weekend)" : ""
-                }`}
-              className={`w-3 h-3 rounded-sm transition-all ${dayData.status === "full"
-                ? "bg-red-500"
-                : dayData.status === "partial"
-                  ? "bg-orange-400"
-                  : dayData.isWorkday
-                    ? "bg-gray-200"
-                    : "bg-gray-100 border border-gray-200" // Lighter for weekends
-                }`}
+              title={`Day ${dayData.day}: ${formatCurrency(dayData.spent)} ${
+                !dayData.isWorkday ? "(Weekend)" : ""
+              }`}
+              className={`w-3 h-3 rounded-sm transition-all ${
+                dayData.status === "full"
+                  ? "bg-red-500"
+                  : dayData.status === "partial"
+                    ? "bg-orange-400"
+                    : dayData.isWorkday
+                      ? "bg-gray-200"
+                      : "bg-gray-100 border border-gray-200" // Lighter for weekends
+              }`}
             />
           ))}
         </div>
       </div>
+
+      {/* Account Comparison */}
+      {(() => {
+        if (!bucket.targetAccountId) return null;
+        const account = accounts.find((a) => a.id === bucket.targetAccountId);
+        if (!account) return null;
+
+        const isLiquid = account.balance >= trackerData.monthlyTotal;
+
+        return (
+          <div
+            className={`mt-4 mx-4 mb-2 p-3 rounded-lg border ${
+              isLiquid
+                ? "bg-blue-50 border-blue-100 text-blue-800"
+                : "bg-red-50 border-red-100 text-red-800"
+            }`}
+          >
+            <div className="flex justify-between items-center text-xs mb-1">
+              <span className="font-bold flex items-center gap-1">
+                {isLiquid ? "Monthly Funds Covered" : "Low Funds Warning"}
+                {!isLiquid && <AlertCircle size={12} />}
+              </span>
+              <span className="opacity-75">{account.name}</span>
+            </div>
+            <div className="flex justify-between items-center text-xs">
+              <span>
+                Account: <strong>{formatCurrency(account.balance)}</strong>
+              </span>
+              <span className="mx-1 opacity-40">/</span>
+              <span>
+                Est. Monthly:{" "}
+                <strong>{formatCurrency(trackerData.monthlyTotal)}</strong>
+              </span>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* View Transactions Toggle */}
       <button
@@ -255,7 +304,8 @@ export function MealTrackerCard({ bucket, onEdit, onDelete }: MealTrackerCardPro
                         {getCategoryName(tx.categoryId)}
                       </p>
                       <p className="text-xs text-gray-400">
-                        {format(new Date(tx.date), "dd MMM yyyy")} · {getAccountName(tx.accountId)}
+                        {format(new Date(tx.date), "dd MMM yyyy")} ·{" "}
+                        {getAccountName(tx.accountId)}
                       </p>
                       {tx.note && (
                         <p className="text-xs text-gray-500 truncate mt-0.5">
