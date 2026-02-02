@@ -7,7 +7,6 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
-  Filter,
 } from "lucide-react";
 import { useMoney } from "../context/MoneyContext";
 import { useState, useMemo, useEffect } from "react";
