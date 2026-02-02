@@ -1,8 +1,18 @@
-import { Plus, Trash2, Pencil, ArrowRightLeft } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  Pencil,
+  ArrowRightLeft,
+  Search,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  Filter,
+} from "lucide-react";
 import { useMoney } from "../context/MoneyContext";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Modal } from "../components/UI/Modal";
-import type { Account } from "../types";
+import type { Account, TransactionType } from "../types";
 import { TransactionList } from "../components/Transactions/TransactionList";
 
 export function Accounts() {
@@ -10,8 +20,30 @@ export function Accounts() {
     useMoney();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
+
+  // Transaction View State
   const [viewingTransactionsAccount, setViewingTransactionsAccount] =
     useState<Account | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterType, setFilterType] = useState<TransactionType | "all">("all");
+  const [selectedMonth, setSelectedMonth] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
+
+  // Reset states when closing or changing account
+  useEffect(() => {
+    if (!viewingTransactionsAccount) {
+      setSearchQuery("");
+      setFilterType("all");
+      setSelectedMonth("");
+      setCurrentPage(1);
+    }
+  }, [viewingTransactionsAccount]);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, filterType, selectedMonth]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("id-ID", {
@@ -33,12 +65,75 @@ export function Accounts() {
 
   const filteredTransactions = useMemo(() => {
     if (!viewingTransactionsAccount) return [];
-    return transactions.filter(
+
+    let result = transactions.filter(
       (t) =>
         t.accountId === viewingTransactionsAccount.id ||
         t.toAccountId === viewingTransactionsAccount.id,
     );
-  }, [transactions, viewingTransactionsAccount]);
+
+    // Apply Type Filter
+    if (filterType !== "all") {
+      result = result.filter((t) => t.type === filterType);
+    }
+
+    // Apply Month Filter
+    if (selectedMonth) {
+      result = result.filter((t) => t.date.startsWith(selectedMonth));
+    }
+
+    // Apply Search Filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      result = result.filter((tx) => {
+        // Search by category name
+        const category = categories.find((c) => c.id === tx.categoryId);
+        if (category?.name.toLowerCase().includes(query)) return true;
+
+        // Search by account name (other side of transfer)
+        const account = accounts.find((a) => a.id === tx.accountId);
+        if (account?.name.toLowerCase().includes(query)) return true;
+
+        if (tx.toAccountId) {
+          const toAccount = accounts.find((a) => a.id === tx.toAccountId);
+          if (toAccount?.name.toLowerCase().includes(query)) return true;
+        }
+
+        // Search by bucket name
+        if (tx.bucketId) {
+          const bucket = buckets.find((b) => b.id === tx.bucketId);
+          if (bucket?.name.toLowerCase().includes(query)) return true;
+        }
+        if (!tx.bucketId && "no bucket".includes(query)) return true;
+
+        // Search by note
+        if (tx.note?.toLowerCase().includes(query)) return true;
+
+        // Search by amount
+        if (tx.amount.toString().includes(query)) return true;
+
+        return false;
+      });
+    }
+
+    return result;
+  }, [
+    transactions,
+    viewingTransactionsAccount,
+    filterType,
+    searchQuery,
+    selectedMonth,
+    categories,
+    accounts,
+    buckets,
+  ]);
+
+  const paginatedTransactions = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredTransactions.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [filteredTransactions, currentPage]);
+
+  const totalPages = Math.ceil(filteredTransactions.length / ITEMS_PER_PAGE);
 
   return (
     <div className="space-y-6">
@@ -144,20 +239,97 @@ export function Accounts() {
           onClose={() => setViewingTransactionsAccount(null)}
           title={`Transactions - ${viewingTransactionsAccount.name}`}
           maxWidth="max-w-4xl"
-          // Add a size prop if Modal supports it, otherwise it might be small.
-          // Assuming Modal is flexible or I might need to adjust it later.
-          // Based on previous analysis, Modal seems standard.
         >
-          <div className="max-h-[70vh] overflow-y-auto -mx-6 px-6">
-            <TransactionList
-              transactions={filteredTransactions}
-              accounts={accounts}
-              categories={categories}
-              buckets={buckets}
-              // Read-only view for now as per plan, or can pass empty handlers if needed?
-              // The TransactionList checks `if (onEdit || onDelete)` to show actions.
-              // Let's keep it read-only for now to avoid complexity with modals on top of modals.
-            />
+          <div className="flex flex-col h-[70vh] -mx-6 px-6">
+            {/* Filters Header */}
+            <div className="mb-4 space-y-3">
+              {/* Search */}
+              <div className="relative">
+                <Search
+                  size={18}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search transactions..."
+                  className="w-full pl-9 pr-9 py-2 text-sm border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-teal-500"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    <X size={16} />
+                  </button>
+                )}
+              </div>
+
+              {/* Type Filters and Month */}
+              <div className="flex flex-wrap gap-2 items-center justify-between">
+                <div className="flex gap-2 text-sm overflow-x-auto pb-1 no-scrollbar">
+                  {(["all", "income", "expense", "transfer"] as const).map(
+                    (type) => (
+                      <button
+                        key={type}
+                        onClick={() => setFilterType(type)}
+                        className={`px-3 py-1.5 rounded-full capitalize whitespace-nowrap transition-colors ${
+                          filterType === type
+                            ? "bg-teal-600 text-white font-medium"
+                            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                        }`}
+                      >
+                        {type}
+                      </button>
+                    ),
+                  )}
+                </div>
+                <input
+                  type="month"
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(e.target.value)}
+                  className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-teal-500 bg-white"
+                />
+              </div>
+            </div>
+
+            {/* List */}
+            <div className="flex-1 overflow-y-auto">
+              <TransactionList
+                transactions={paginatedTransactions}
+                accounts={accounts}
+                categories={categories}
+                buckets={buckets}
+              />
+            </div>
+
+            {/* Pagination Footer */}
+            {totalPages > 1 && (
+              <div className="pt-4 mt-2 border-t border-gray-100 flex items-center justify-between">
+                <p className="text-sm text-gray-500">
+                  Page {currentPage} of {totalPages}
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="p-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <ChevronLeft size={20} />
+                  </button>
+                  <button
+                    onClick={() =>
+                      setCurrentPage((p) => Math.min(totalPages, p + 1))
+                    }
+                    disabled={currentPage === totalPages}
+                    className="p-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <ChevronRight size={20} />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </Modal>
       )}
