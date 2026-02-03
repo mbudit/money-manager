@@ -41,26 +41,54 @@ export function MealTrackerCard({
     const currentMonth = now.getMonth();
     const currentDay = now.getDate();
 
-    // 1. Calculate Workdays in Current Month
+    // 0. Define Today Start (Midnight)
+    const todayStart = new Date(currentYear, currentMonth, currentDay);
+    todayStart.setHours(0, 0, 0, 0);
+    const todayStartTime = todayStart.getTime();
+
+    // 1. Calculate Workdays in Current Month and Prior Workdays
     const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
     let workdaysCount = 0;
+    let workdaysPrior = 0;
+
     for (let day = 1; day <= daysInMonth; day++) {
-      const date = new Date(currentYear, currentMonth, day);
-      const dayOfWeek = date.getDay();
+      const loopDate = new Date(currentYear, currentMonth, day);
+      const dayOfWeek = loopDate.getDay();
+
+      // Check if it's a workday (Mon-Fri)
       if (dayOfWeek !== 0 && dayOfWeek !== 6) {
         workdaysCount++;
+        // Use strict timestamp comparison
+        // loopDate is 00:00 by default in the loop construction above
+        if (loopDate.getTime() < todayStartTime) {
+          workdaysPrior++;
+        }
       }
     }
 
-    // 2. Daily Allowance is now the LIMIT itself
+    // 2. Daily Allowance is the LIMIT itself (as per user's setup)
     const dailyAllowance = bucket.limit;
 
-    // 3. Calculate Spent Today
-    const todayStart = new Date(currentYear, currentMonth, currentDay);
-    todayStart.setHours(0, 0, 0, 0);
+    // 3. Calculate Spent Prior (Strictly before today)
+    const spentPrior = transactions
+      .filter((t) => {
+        const tDate = new Date(t.date);
+        return (
+          t.type === "expense" &&
+          t.bucketId === bucket.id &&
+          tDate.getMonth() === currentMonth &&
+          tDate.getFullYear() === currentYear &&
+          tDate.getTime() < todayStartTime
+        );
+      })
+      .reduce((sum, t) => sum + t.amount, 0);
 
-    // We only care about transactions that match the bucket's ID
-    // AND happen TODAY.
+    // 4. Calculate Rollover (Leftovers or Deficit from previous days)
+    // Allowance accrued until yesterday = workdaysPrior * dailyAllowance
+    const accruedPrior = workdaysPrior * dailyAllowance;
+    const rollover = accruedPrior - spentPrior;
+
+    // 5. Calculate Spent Today
     const spentToday = transactions
       .filter((t) => {
         const tDate = new Date(t.date);
@@ -74,13 +102,15 @@ export function MealTrackerCard({
       })
       .reduce((sum, t) => sum + t.amount, 0);
 
-    // 4. Calculate Remaining Today
-    const remainingToday = dailyAllowance - spentToday;
+    // 6. Calculate Remaining Today
+    // Available Today = Daily Base + Rollover
+    const availableToday = dailyAllowance + rollover;
+    const remainingToday = availableToday - spentToday;
 
-    // 5. Projected Monthly Total (for display)
+    // 7. Projected Monthly Total
     const monthlyTotal = dailyAllowance * workdaysCount;
 
-    // 6. Grid Data for Visualization
+    // 8. Grid Data for Visualization
     const gridData = [];
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(currentYear, currentMonth, day);
@@ -111,6 +141,7 @@ export function MealTrackerCard({
     return {
       workdaysCount,
       dailyAllowance,
+      rollover,
       spentToday,
       remainingToday,
       monthlyTotal,
@@ -171,7 +202,16 @@ export function MealTrackerCard({
             <p className="text-lg font-bold text-gray-700">
               {formatCurrency(trackerData.dailyAllowance)}
             </p>
-            <p className="text-[10px] text-gray-400">
+            {trackerData.rollover !== 0 && (
+              <p
+                className={`text-xs font-medium ${trackerData.rollover > 0 ? "text-teal-600" : "text-red-500"}`}
+              >
+                {trackerData.rollover > 0 ? "+" : ""}
+                {formatCurrency(trackerData.rollover)}{" "}
+                {trackerData.rollover > 0 ? "leftover" : "overspent"}
+              </p>
+            )}
+            <p className="text-[10px] text-gray-400 mt-1">
               {formatCurrency(trackerData.monthlyTotal)} /{" "}
               {trackerData.workdaysCount} days
             </p>
