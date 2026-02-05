@@ -206,18 +206,34 @@ export function MealTrackerCard({
             <p className="text-lg font-bold text-gray-700">
               {formatCurrency(trackerData.dailyAllowance)}
             </p>
-            {trackerData.rollover !== 0 && (
-              <p
-                className={`text-xs font-medium ${trackerData.rollover > 0 ? "text-teal-600" : "text-red-500"}`}
-              >
-                {trackerData.rollover > 0 ? "+" : ""}
-                {formatCurrency(trackerData.rollover)}{" "}
-                {trackerData.rollover > 0 ? "leftover" : "overspent"}
-              </p>
-            )}
+            {/* Show leftover indicator only when there are leftovers available */}
+            {(() => {
+              const effectiveLeftover =
+                trackerData.remainingToday - trackerData.dailyAllowance;
+              if (effectiveLeftover > 0) {
+                return (
+                  <p className="text-xs font-medium text-teal-600">
+                    +{formatCurrency(effectiveLeftover)} leftover
+                  </p>
+                );
+              }
+              return null;
+            })()}
             <p className="text-[10px] text-gray-500 mt-2 font-medium">
-              Monthly Remaining: <span className={trackerData.remainingMonthly < 0 ? "text-red-500" : "text-gray-700"}>{formatCurrency(trackerData.remainingMonthly)}</span>
-              <span className="text-gray-400 font-normal"> / {formatCurrency(trackerData.monthlyTotal)}</span>
+              Monthly Remaining:{" "}
+              <span
+                className={
+                  trackerData.remainingMonthly < 0
+                    ? "text-red-500"
+                    : "text-gray-700"
+                }
+              >
+                {formatCurrency(trackerData.remainingMonthly)}
+              </span>
+              <span className="text-gray-400 font-normal">
+                {" "}
+                / {formatCurrency(trackerData.monthlyTotal)}
+              </span>
             </p>
           </div>
 
@@ -253,16 +269,18 @@ export function MealTrackerCard({
           {trackerData.gridData.map((dayData) => (
             <div
               key={dayData.day}
-              title={`Day ${dayData.day}: ${formatCurrency(dayData.spent)} ${!dayData.isWorkday ? "(Weekend)" : ""
-                }`}
-              className={`w-3 h-3 rounded-sm transition-all ${dayData.status === "full"
-                ? "bg-red-500"
-                : dayData.status === "partial"
-                  ? "bg-orange-400"
-                  : dayData.isWorkday
-                    ? "bg-gray-200"
-                    : "bg-gray-100 border border-gray-200" // Lighter for weekends
-                }`}
+              title={`Day ${dayData.day}: ${formatCurrency(dayData.spent)} ${
+                !dayData.isWorkday ? "(Weekend)" : ""
+              }`}
+              className={`w-3 h-3 rounded-sm transition-all ${
+                dayData.status === "full"
+                  ? "bg-red-500"
+                  : dayData.status === "partial"
+                    ? "bg-orange-400"
+                    : dayData.isWorkday
+                      ? "bg-gray-200"
+                      : "bg-gray-100 border border-gray-200" // Lighter for weekends
+              }`}
             />
           ))}
         </div>
@@ -280,10 +298,11 @@ export function MealTrackerCard({
 
         return (
           <div
-            className={`mt-4 mx-4 mb-2 p-3 rounded-lg border ${isLiquid
+            className={`mt-4 mx-4 mb-2 p-3 rounded-lg border ${
+              isLiquid
                 ? "bg-blue-50 border-blue-100 text-blue-800"
                 : "bg-red-50 border-red-100 text-red-800"
-              }`}
+            }`}
           >
             <div className="flex justify-between items-center text-xs mb-1">
               <span className="font-bold flex items-center gap-1">
