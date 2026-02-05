@@ -107,8 +107,11 @@ export function MealTrackerCard({
     const availableToday = dailyAllowance + rollover;
     const remainingToday = availableToday - spentToday;
 
-    // 7. Projected Monthly Total
+    // 7. Projected Monthly Total & Remaining Monthly
     const monthlyTotal = dailyAllowance * workdaysCount;
+    // Total spent so far (prior + today)
+    const totalSpentSoFar = spentPrior + spentToday;
+    const remainingMonthly = monthlyTotal - totalSpentSoFar;
 
     // 8. Grid Data for Visualization
     const gridData = [];
@@ -145,6 +148,7 @@ export function MealTrackerCard({
       spentToday,
       remainingToday,
       monthlyTotal,
+      remainingMonthly,
       gridData,
     };
   }, [bucket, transactions]);
@@ -211,9 +215,9 @@ export function MealTrackerCard({
                 {trackerData.rollover > 0 ? "leftover" : "overspent"}
               </p>
             )}
-            <p className="text-[10px] text-gray-400 mt-1">
-              {formatCurrency(trackerData.monthlyTotal)} /{" "}
-              {trackerData.workdaysCount} days
+            <p className="text-[10px] text-gray-500 mt-2 font-medium">
+              Monthly Remaining: <span className={trackerData.remainingMonthly < 0 ? "text-red-500" : "text-gray-700"}>{formatCurrency(trackerData.remainingMonthly)}</span>
+              <span className="text-gray-400 font-normal"> / {formatCurrency(trackerData.monthlyTotal)}</span>
             </p>
           </div>
 
@@ -249,18 +253,16 @@ export function MealTrackerCard({
           {trackerData.gridData.map((dayData) => (
             <div
               key={dayData.day}
-              title={`Day ${dayData.day}: ${formatCurrency(dayData.spent)} ${
-                !dayData.isWorkday ? "(Weekend)" : ""
-              }`}
-              className={`w-3 h-3 rounded-sm transition-all ${
-                dayData.status === "full"
-                  ? "bg-red-500"
-                  : dayData.status === "partial"
-                    ? "bg-orange-400"
-                    : dayData.isWorkday
-                      ? "bg-gray-200"
-                      : "bg-gray-100 border border-gray-200" // Lighter for weekends
-              }`}
+              title={`Day ${dayData.day}: ${formatCurrency(dayData.spent)} ${!dayData.isWorkday ? "(Weekend)" : ""
+                }`}
+              className={`w-3 h-3 rounded-sm transition-all ${dayData.status === "full"
+                ? "bg-red-500"
+                : dayData.status === "partial"
+                  ? "bg-orange-400"
+                  : dayData.isWorkday
+                    ? "bg-gray-200"
+                    : "bg-gray-100 border border-gray-200" // Lighter for weekends
+                }`}
             />
           ))}
         </div>
@@ -272,15 +274,16 @@ export function MealTrackerCard({
         const account = accounts.find((a) => a.id === bucket.targetAccountId);
         if (!account) return null;
 
-        const isLiquid = account.balance >= trackerData.monthlyTotal;
+        const isLiquid = account.balance >= trackerData.remainingMonthly;
+        // Use max(0, ...) so we don't show negative remaining budget in the context of "what do I need to have in my account"
+        const remainingToFund = Math.max(0, trackerData.remainingMonthly);
 
         return (
           <div
-            className={`mt-4 mx-4 mb-2 p-3 rounded-lg border ${
-              isLiquid
+            className={`mt-4 mx-4 mb-2 p-3 rounded-lg border ${isLiquid
                 ? "bg-blue-50 border-blue-100 text-blue-800"
                 : "bg-red-50 border-red-100 text-red-800"
-            }`}
+              }`}
           >
             <div className="flex justify-between items-center text-xs mb-1">
               <span className="font-bold flex items-center gap-1">
@@ -295,8 +298,8 @@ export function MealTrackerCard({
               </span>
               <span className="mx-1 opacity-40">/</span>
               <span>
-                Est. Monthly:{" "}
-                <strong>{formatCurrency(trackerData.monthlyTotal)}</strong>
+                Est. Remaining:{" "}
+                <strong>{formatCurrency(remainingToFund)}</strong>
               </span>
             </div>
           </div>

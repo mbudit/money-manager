@@ -103,65 +103,105 @@ export function Budgets() {
       {(() => {
         const totalCash = accounts.reduce((sum, acc) => sum + acc.balance, 0);
 
-        const totalBudgeted = buckets.reduce((sum, bucket) => {
+        const totalRemainingNeeded = buckets.reduce((sum, bucket) => {
+          // 1. Calculate Spent for this bucket
+          let spent = 0;
+          let limit = bucket.limit;
+
           if (bucket.isMealTracker) {
-            // Project Meal Daily Rate to Monthly (approx 22 days)
-            return sum + bucket.limit * 22;
+            // Meal Tracker Logic: Calculate Monthly Limit based on Workdays
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            const currentMonth = now.getMonth();
+            const daysInMonth = new Date(
+              currentYear,
+              currentMonth + 1,
+              0,
+            ).getDate();
+            let workdaysCount = 0;
+            for (let day = 1; day <= daysInMonth; day++) {
+              const date = new Date(currentYear, currentMonth, day);
+              const dayOfWeek = date.getDay();
+              if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+                workdaysCount++;
+              }
+            }
+
+            // Real Monthly Limit for Meal Tracker
+            limit = bucket.limit * workdaysCount;
+
+            // Spent strictly this month
+            spent = transactions
+              .filter((t) => {
+                const tDate = new Date(t.date);
+                return (
+                  t.type === "expense" &&
+                  t.bucketId === bucket.id &&
+                  tDate.getMonth() === currentMonth &&
+                  tDate.getFullYear() === currentYear
+                );
+              })
+              .reduce((s, t) => s + t.amount, 0);
+          } else {
+            // Standard Bucket Logic
+            spent = getBucketSpent(
+              bucket.id,
+              bucket.period || "monthly",
+              bucket.constraint || "all",
+            );
           }
-          return sum + bucket.limit;
+
+          // Remaining needed for this bucket
+          const remaining = Math.max(0, limit - spent);
+          return sum + remaining;
         }, 0);
 
-        const diff = totalCash - totalBudgeted;
-        const isOverAllocated = diff < -1; // Tolerance
+        const diff = totalCash - totalRemainingNeeded;
+        const isOverAllocated = diff < -1000; // Tolerance
 
         return (
           <div
-            className={`p-4 rounded-xl border ${
-              isOverAllocated
-                ? "bg-red-50 border-red-100"
-                : "bg-teal-50 border-teal-100"
-            }`}
+            className={`p-4 rounded-xl border ${isOverAllocated
+              ? "bg-red-50 border-red-100"
+              : "bg-teal-50 border-teal-100"
+              }`}
           >
             <div className="flex items-start gap-3">
               <div
-                className={`p-2 rounded-full ${
-                  isOverAllocated
-                    ? "bg-red-100 text-red-600"
-                    : "bg-teal-100 text-teal-600"
-                }`}
+                className={`p-2 rounded-full ${isOverAllocated
+                  ? "bg-red-100 text-red-600"
+                  : "bg-teal-100 text-teal-600"
+                  }`}
               >
                 <AlertTriangle size={20} />
               </div>
               <div className="flex-1">
                 <div className="flex justify-between items-center">
                   <h3
-                    className={`font-bold ${
-                      isOverAllocated ? "text-red-800" : "text-teal-800"
-                    }`}
+                    className={`font-bold ${isOverAllocated ? "text-red-800" : "text-teal-800"
+                      }`}
                   >
                     {isOverAllocated
-                      ? "Over-Allocated"
+                      ? "Insufficient Funds"
                       : "Budget Solvency Check"}
                   </h3>
                   <span
-                    className={`text-xs font-bold px-2 py-1 rounded-full ${
-                      isOverAllocated
-                        ? "bg-red-200 text-red-700"
-                        : "bg-teal-200 text-teal-700"
-                    }`}
+                    className={`text-xs font-bold px-2 py-1 rounded-full ${isOverAllocated
+                      ? "bg-red-200 text-red-700"
+                      : "bg-teal-200 text-teal-700"
+                      }`}
                   >
                     {isOverAllocated ? formatCurrency(diff) : "Liquid"}
                   </span>
                 </div>
 
                 <p
-                  className={`text-sm mt-1 ${
-                    isOverAllocated ? "text-red-600" : "text-teal-600"
-                  }`}
+                  className={`text-sm mt-1 ${isOverAllocated ? "text-red-600" : "text-teal-600"
+                    }`}
                 >
                   Real: <strong>{formatCurrency(totalCash)}</strong>
                   <span className="mx-1">vs</span>
-                  Budgeted: <strong>{formatCurrency(totalBudgeted)}</strong>
+                  Remaining: <strong>{formatCurrency(totalRemainingNeeded)}</strong>
                   <span className="mx-2">|</span>
                   <span className="font-bold">
                     {diff >= 0 ? "Surplus: " : "Deficit: "}
@@ -171,8 +211,7 @@ export function Budgets() {
 
                 {isOverAllocated && (
                   <p className="text-xs mt-2 font-medium opacity-90 text-red-600">
-                    Warning: You have budgeted more money than you actually have
-                    across all accounts.
+                    Warning: You don't have enough cash to cover the remaining budget for this month.
                   </p>
                 )}
               </div>
