@@ -158,7 +158,8 @@ export function TransactionList({
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-      <div className="overflow-x-auto">
+      {/* Desktop Table View */}
+      <div className="hidden md:block overflow-x-auto">
         <table className="w-full text-left">
           <thead className="bg-gray-50 border-b border-gray-100">
             <tr>
@@ -359,6 +360,148 @@ export function TransactionList({
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile List View */}
+      <div className="block md:hidden">
+        {dayGroups.map((group) => (
+          <div key={`mobile-group-${group.dateKey}`}>
+            {/* Mobile Date Header */}
+            <div className="bg-gray-50/90 px-4 py-3 border-b border-gray-100 sticky top-0 backdrop-blur-sm z-10">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold text-gray-800">
+                    {group.label}
+                  </span>
+                </div>
+                <div className="flex items-center gap-3 text-xs font-medium">
+                  {group.totalIncome > 0 && (
+                    <span className="text-teal-600">
+                      +{formatCurrency(group.totalIncome)}
+                    </span>
+                  )}
+                  {group.totalExpense > 0 && (
+                    <span className="text-red-600">
+                      -{formatCurrency(group.totalExpense)}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Mobile Transaction Items */}
+            <div className="divide-y divide-gray-100">
+              {group.transactions.map((transaction) => {
+                const category = getCategory(transaction.categoryId);
+                const isExpense = transaction.type === "expense";
+                const isIncome = transaction.type === "income";
+                const isTransfer = transaction.type === "transfer";
+
+                return (
+                  <div key={transaction.id} className="p-4 bg-white active:bg-gray-50">
+                    <div className="flex items-start gap-3">
+                      {/* Icon */}
+                      <div
+                        className={`w-10 h-10 rounded-full flex items-center justify-center text-white shrink-0 mt-1`}
+                        style={{
+                          backgroundColor: isTransfer
+                            ? "#6B7280"
+                            : category?.color || "#9CA3AF",
+                        }}
+                      >
+                        {isExpense && <ArrowDownLeft size={20} />}
+                        {isIncome && <ArrowUpRight size={20} />}
+                        {isTransfer && <ArrowRight size={20} />}
+                      </div>
+
+                      {/* Content */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-start gap-2">
+                          <div>
+                            <p className="font-medium text-gray-900 truncate">
+                              {isTransfer
+                                ? "Transfer"
+                                : category?.name || "Uncategorized"}
+                            </p>
+                            <div className="flex items-center gap-2 text-xs text-gray-500 mt-0.5">
+                              {isTransfer ? (
+                                <div className="flex items-center gap-1">
+                                  <span>{getAccountName(transaction.accountId)}</span>
+                                  <ArrowRight size={12} />
+                                  <span>{getAccountName(transaction.toAccountId || "")}</span>
+                                </div>
+                              ) : (
+                                <span>{getAccountName(transaction.accountId)}</span>
+                              )}
+                              <span>•</span>
+                              <span>{format(new Date(transaction.date), "HH:mm")}</span>
+                            </div>
+                          </div>
+
+                          <div className="text-right shrink-0">
+                            <p
+                              className={`font-semibold ${isExpense
+                                  ? "text-red-600"
+                                  : isIncome
+                                    ? "text-teal-600"
+                                    : "text-gray-900"
+                                }`}
+                            >
+                              {isExpense ? "-" : isIncome ? "+" : ""}
+                              {new Intl.NumberFormat("id-ID", {
+                                style: "currency",
+                                currency: "IDR",
+                                maximumFractionDigits: 0
+                              }).format(transaction.amount)}
+                            </p>
+                            {transaction.bucketId && (
+                              <span className="inline-block px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded text-[10px] font-medium mt-1">
+                                {getBucketName(transaction.bucketId)}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {(transaction.note || onEdit || onDelete) && (
+                          <div className="flex justify-between items-end mt-2">
+                            <p className="text-sm text-gray-500 line-clamp-1 flex-1 mr-2">
+                              {transaction.note}
+                            </p>
+
+                            {(onEdit || onDelete) && (
+                              <div className="flex gap-1 shrink-0">
+                                {onEdit && (
+                                  <button
+                                    onClick={() => onEdit(transaction)}
+                                    className="p-1.5 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded"
+                                  >
+                                    <Pencil size={16} />
+                                  </button>
+                                )}
+                                {onDelete && (
+                                  <button
+                                    onClick={() => {
+                                      if (window.confirm("Delete this transaction?")) {
+                                        onDelete(transaction.id);
+                                      }
+                                    }}
+                                    className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
+                                  >
+                                    <Trash2 size={16} />
+                                  </button>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
