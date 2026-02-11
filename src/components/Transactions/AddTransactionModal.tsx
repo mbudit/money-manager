@@ -137,6 +137,17 @@ export function AddTransactionModal({
     return true;
   });
 
+  const handleScrollToView = (
+    e: React.FocusEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >,
+  ) => {
+    // Small delay to allow virtual keyboard to appear on mobile
+    setTimeout(() => {
+      e.target.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 300);
+  };
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={isEditMode ? "Edit Transaction" : "Add Transaction"}>
       <div className="flex p-1 bg-gray-100 rounded-lg mb-6">
@@ -221,6 +232,7 @@ export function AddTransactionModal({
             required
             value={date}
             onChange={(e) => setDate(e.target.value)}
+            onFocus={handleScrollToView}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
           />
         </div>
@@ -246,6 +258,7 @@ export function AddTransactionModal({
                 const formatted = value.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
                 setAmount(formatted);
               }}
+              onFocus={handleScrollToView}
               className="w-full pl-10 pr-3 py-2 text-lg font-bold text-gray-900 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
               placeholder="0"
             />
@@ -348,11 +361,12 @@ export function AddTransactionModal({
           <label className="block text-xs font-medium text-gray-500 mb-1">
             Note (Optional)
           </label>
-          <textarea
+          <input
+            type="text"
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            rows={2}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none"
+            onFocus={handleScrollToView}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
             placeholder="Add a note..."
           />
         </div>
