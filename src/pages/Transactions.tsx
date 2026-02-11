@@ -1,30 +1,23 @@
 import { useState, useMemo } from "react";
 import { Plus, Search, X } from "lucide-react";
 import { useMoney } from "../context/MoneyContext";
+import { useUI } from "../context/UIContext";
 import { TransactionList } from "../components/Transactions/TransactionList";
-import { AddTransactionModal } from "../components/Transactions/AddTransactionModal";
 import type { Transaction } from "../types";
 
 export function Transactions() {
   const { transactions, accounts, categories, buckets, deleteTransaction } =
     useMoney();
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingTransaction, setEditingTransaction] = useState<
-    Transaction | undefined
-  >(undefined);
+  const { openAddTransactionModal } = useUI();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
   const handleEdit = (transaction: Transaction) => {
-    setEditingTransaction(transaction);
-    setIsModalOpen(true);
+    openAddTransactionModal(transaction);
   };
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setEditingTransaction(undefined);
-  };
 
   // Filter transactions based on search query
   const filteredTransactions = useMemo(() => {
@@ -91,9 +84,10 @@ export function Transactions() {
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-gray-800">Transactions</h2>
         <button
-          onClick={() => setIsModalOpen(true)}
+          onClick={() => openAddTransactionModal()}
           className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors shadow-lg shadow-teal-600/20"
         >
+
           <Plus size={20} />
           <span>Add Transaction</span>
         </button>
@@ -158,12 +152,6 @@ export function Transactions() {
         buckets={buckets}
         onEdit={handleEdit}
         onDelete={deleteTransaction}
-      />
-
-      <AddTransactionModal
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        transaction={editingTransaction}
       />
     </div>
   );
