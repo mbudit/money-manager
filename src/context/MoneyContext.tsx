@@ -35,6 +35,7 @@ interface MoneyContextType {
   categories: Category[];
   buckets: Bucket[]; // Added
   addCategory: (category: Omit<Category, "id">) => Promise<void>;
+  updateCategory: (id: string, data: Partial<Omit<Category, "id">>) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
   addTransaction: (transaction: Omit<Transaction, "id">) => Promise<void>;
   updateTransaction: (
@@ -587,6 +588,15 @@ const MoneyProviderInner = ({ children }: { children: ReactNode }) => {
     await deleteDoc(doc(db, `users/${user.uid}/categories`, id));
   };
 
+  const updateCategory = async (
+    id: string,
+    data: Partial<Omit<Category, "id">>,
+  ) => {
+    if (!user) return;
+    const categoryRef = doc(db, `users/${user.uid}/categories`, id);
+    await updateDoc(categoryRef, data);
+  };
+
   const addBucket = async (bucketData: Omit<Bucket, "id">) => {
     if (!user) return;
     await addDoc(collection(db, `users/${user.uid}/buckets`), bucketData);
@@ -611,6 +621,7 @@ const MoneyProviderInner = ({ children }: { children: ReactNode }) => {
         categories,
         buckets,
         addCategory,
+        updateCategory,
         deleteCategory,
         addTransaction,
         updateTransaction,

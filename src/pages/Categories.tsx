@@ -9,6 +9,9 @@ import type { Category } from "@/types";
 export function Categories() {
   const { categories, addCategory, deleteCategory } = useMoney();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<Category | undefined>(
+    undefined,
+  );
 
   // Group by type
   const expenseCategories = categories.filter((c) => c.type === "expense");
@@ -48,6 +51,21 @@ export function Categories() {
     }
   };
 
+  const handleEdit = (category: Category) => {
+    setEditingCategory(category);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setEditingCategory(undefined);
+  };
+
+  const handleOpenAddModal = () => {
+    setEditingCategory(undefined);
+    setIsModalOpen(true);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -60,7 +78,7 @@ export function Categories() {
             Add Defaults
           </button>
           <button
-            onClick={() => setIsModalOpen(true)}
+            onClick={handleOpenAddModal}
             className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
           >
             <Plus size={20} />
@@ -75,6 +93,7 @@ export function Categories() {
           title="Expense"
           categories={expenseCategories}
           onDelete={deleteCategory}
+          onEdit={handleEdit}
           iconBgClass="bg-red-100"
           iconColorClass="text-red-600"
           emptyMessage="No expense categories."
@@ -85,6 +104,7 @@ export function Categories() {
           title="Income"
           categories={incomeCategories}
           onDelete={deleteCategory}
+          onEdit={handleEdit}
           iconBgClass="bg-blue-100"
           iconColorClass="text-blue-600"
           emptyMessage="No income categories."
@@ -93,10 +113,13 @@ export function Categories() {
 
       <Modal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title="Add Category"
+        onClose={handleCloseModal}
+        title={editingCategory ? "Edit Category" : "Add Category"}
       >
-        <AddCategoryForm onClose={() => setIsModalOpen(false)} />
+        <AddCategoryForm
+          onClose={handleCloseModal}
+          initialData={editingCategory}
+        />
       </Modal>
     </div>
   );

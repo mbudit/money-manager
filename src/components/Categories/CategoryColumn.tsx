@@ -1,10 +1,11 @@
-import { Trash2, Tag } from "lucide-react";
+import { Trash2, Tag, Pencil } from "lucide-react";
 import type { Category } from "@/types";
 
 interface CategoryColumnProps {
   title: string;
   categories: Category[];
   onDelete: (id: string) => void;
+  onEdit: (category: Category) => void;
   iconBgClass: string;
   iconColorClass: string;
   emptyMessage: string;
@@ -14,6 +15,7 @@ export function CategoryColumn({
   title,
   categories,
   onDelete,
+  onEdit,
   iconBgClass,
   iconColorClass,
   emptyMessage,
@@ -47,14 +49,24 @@ export function CategoryColumn({
                 {cat.name}
               </span>
             </div>
-            <button
-              onClick={() => {
-                if (confirm(`Delete category "${cat.name}"?`)) onDelete(cat.id);
-              }}
-              className="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-            >
-              <Trash2 size={14} />
-            </button>
+            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button
+                onClick={() => onEdit(cat)}
+                className="p-1 text-gray-400 hover:text-teal-500 rounded-md hover:bg-teal-50"
+                title="Edit"
+              >
+                <Pencil size={14} />
+              </button>
+              <button
+                onClick={() => {
+                  if (confirm(`Delete category "${cat.name}"?`)) onDelete(cat.id);
+                }}
+                className="p-1 text-gray-400 hover:text-red-500 rounded-md hover:bg-red-50"
+                title="Delete"
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
           </div>
         ))}
         {categories.length === 0 && (
