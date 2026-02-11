@@ -47,7 +47,7 @@ export function AddTransactionModal({
   useEffect(() => {
     if (transaction && isOpen) {
       setActiveTab(transaction.type);
-      setAmount(transaction.amount.toString());
+      setAmount(transaction.amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
       // Format date for datetime-local input
       const txDate = new Date(transaction.date);
       setDate(format(txDate, "yyyy-MM-dd'T'HH:mm"));
@@ -79,10 +79,12 @@ export function AddTransactionModal({
     if (activeTab === "transfer" && !toAccountId) return;
 
     try {
+      const cleanAmount = parseFloat(amount.replace(/,/g, ""));
+
       if (isEditMode && transaction) {
         // Update existing transaction
         await updateTransaction(transaction.id, {
-          amount: parseFloat(amount),
+          amount: cleanAmount,
           type: activeTab,
           date,
           categoryId: activeTab === "transfer" ? undefined : (categoryId || undefined),
@@ -93,7 +95,7 @@ export function AddTransactionModal({
         });
       } else if (isRecurring) {
         await addRecurringTransaction({
-          amount: parseFloat(amount),
+          amount: cleanAmount,
           type: activeTab,
           startDate: date,
           frequency,
@@ -104,7 +106,7 @@ export function AddTransactionModal({
         });
       } else {
         await addTransaction({
-          amount: parseFloat(amount),
+          amount: cleanAmount,
           type: activeTab,
           date,
           categoryId: activeTab === "transfer" ? undefined : categoryId,
@@ -233,12 +235,17 @@ export function AddTransactionModal({
               Rp
             </span>
             <input
-              type="number"
+              type="text"
+              inputMode="numeric"
               required
-              min="0"
-              step="1"
               value={amount}
-              onChange={(e) => setAmount(e.target.value)}
+              onChange={(e) => {
+                // Remove non-digit characters
+                const value = e.target.value.replace(/\D/g, "");
+                // Format with commas
+                const formatted = value.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                setAmount(formatted);
+              }}
               className="w-full pl-10 pr-3 py-2 text-lg font-bold text-gray-900 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
               placeholder="0"
             />
