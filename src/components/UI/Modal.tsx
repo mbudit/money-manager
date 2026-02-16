@@ -30,13 +30,13 @@ export function Modal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 pb-20 md:pb-4">
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
         onClick={onClose}
       />
       <div
-        className={`relative bg-white rounded-xl shadow-xl w-full ${maxWidth} overflow-hidden animate-in fade-in zoom-in duration-200`}
+        className={`relative bg-white rounded-xl shadow-xl w-full ${maxWidth} max-h-[90vh] flex flex-col animate-in fade-in zoom-in duration-200`}
       >
         <div className="flex items-center justify-between p-4 border-b border-gray-100">
           <h3 className="text-lg font-bold text-gray-900">{title}</h3>
@@ -47,7 +47,7 @@ export function Modal({
             <X size={20} />
           </button>
         </div>
-        <div className="p-6">{children}</div>
+        <div className="p-6 overflow-y-auto flex-1">{children}</div>
       </div>
     </div>
   );

@@ -168,7 +168,7 @@ export function MealTrackerCard({
         <Utensils size={120} />
       </div>
 
-      <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity z-20 flex gap-2">
+      <div className="absolute top-4 right-4 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-20 flex gap-2">
         <button
           onClick={() => onEdit(bucket)}
           className="text-orange-400 hover:text-teal-600 text-xs font-medium bg-white/50 px-2 py-1 rounded"
@@ -269,18 +269,16 @@ export function MealTrackerCard({
           {trackerData.gridData.map((dayData) => (
             <div
               key={dayData.day}
-              title={`Day ${dayData.day}: ${formatCurrency(dayData.spent)} ${
-                !dayData.isWorkday ? "(Weekend)" : ""
-              }`}
-              className={`w-3 h-3 rounded-sm transition-all ${
-                dayData.status === "full"
+              title={`Day ${dayData.day}: ${formatCurrency(dayData.spent)} ${!dayData.isWorkday ? "(Weekend)" : ""
+                }`}
+              className={`w-3 h-3 rounded-sm transition-all ${dayData.status === "full"
                   ? "bg-red-500"
                   : dayData.status === "partial"
                     ? "bg-orange-400"
                     : dayData.isWorkday
                       ? "bg-gray-200"
                       : "bg-gray-100 border border-gray-200" // Lighter for weekends
-              }`}
+                }`}
             />
           ))}
         </div>
@@ -298,11 +296,10 @@ export function MealTrackerCard({
 
         return (
           <div
-            className={`mt-4 mx-4 mb-2 p-3 rounded-lg border ${
-              isLiquid
+            className={`mt-4 mx-4 mb-2 p-3 rounded-lg border ${isLiquid
                 ? "bg-blue-50 border-blue-100 text-blue-800"
                 : "bg-red-50 border-red-100 text-red-800"
-            }`}
+              }`}
           >
             <div className="flex justify-between items-center text-xs mb-1">
               <span className="font-bold flex items-center gap-1">
