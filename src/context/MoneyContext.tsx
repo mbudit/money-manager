@@ -610,7 +610,9 @@ const MoneyProviderInner = ({ children }: { children: ReactNode }) => {
 
   const deleteBucket = async (id: string) => {
     if (!user) return;
-    await deleteDoc(doc(db, `users/${user.uid}/buckets`, id));
+    await updateDoc(doc(db, `users/${user.uid}/buckets`, id), {
+      archived: true,
+    });
   };
 
   return (

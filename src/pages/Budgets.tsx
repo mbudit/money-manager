@@ -103,7 +103,7 @@ export function Budgets() {
       {(() => {
         const totalCash = accounts.reduce((sum, acc) => sum + acc.balance, 0);
 
-        const totalRemainingNeeded = buckets.reduce((sum, bucket) => {
+        const totalRemainingNeeded = buckets.filter((b) => !b.archived).reduce((sum, bucket) => {
           // 1. Calculate Spent for this bucket
           let spent = 0;
           let limit = bucket.limit;
@@ -118,8 +118,21 @@ export function Budgets() {
               currentMonth + 1,
               0,
             ).getDate();
+
+            // Respect bucket creation date (don't count workdays before it existed)
+            let startDay = 1;
+            if (bucket.createdAt) {
+              const created = new Date(bucket.createdAt + "T00:00:00");
+              if (
+                created.getFullYear() === currentYear &&
+                created.getMonth() === currentMonth
+              ) {
+                startDay = created.getDate();
+              }
+            }
+
             let workdaysCount = 0;
-            for (let day = 1; day <= daysInMonth; day++) {
+            for (let day = startDay; day <= daysInMonth; day++) {
               const date = new Date(currentYear, currentMonth, day);
               const dayOfWeek = date.getDay();
               if (dayOfWeek !== 0 && dayOfWeek !== 6) {
@@ -221,7 +234,7 @@ export function Budgets() {
       })()}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {buckets.map((bucket) => {
+        {buckets.filter((b) => !b.archived).map((bucket) => {
           if (bucket.isMealTracker) {
             return (
               <MealTrackerCard

@@ -51,8 +51,8 @@ export function TransactionList({
     accounts.find((a) => a.id === id)?.name || "Unknown Account";
   const getCategory = (id?: string) => categories.find((c) => c.id === id);
   const getBucketName = (id?: string) => {
-    if (!id) return "No Bucket";
-    return buckets.find((b) => b.id === id)?.name || "No Bucket";
+    if (!id) return null;
+    return buckets.find((b) => b.id === id)?.name || null;
   };
 
   const handleSort = (field: SortField) => {
@@ -335,14 +335,21 @@ export function TransactionList({
                         }).format(transaction.amount)}
                       </td>
                       <td className="px-6 py-4 text-sm text-center">
-                        <span
-                          className={`inline-flex items-center justify-center px-2 py-1 rounded-full text-xs font-medium ${transaction.bucketId
-                            ? "bg-blue-100 text-blue-700"
-                            : "bg-gray-100 text-gray-500"
-                            }`}
-                        >
-                          {getBucketName(transaction.bucketId)}
-                        </span>
+                        {(() => {
+                          const name = getBucketName(transaction.bucketId);
+                          return (
+                            <span
+                              className={`inline-flex items-center justify-center px-2 py-1 rounded-full text-xs font-medium ${name
+                                ? "bg-blue-100 text-blue-700"
+                                : transaction.bucketId
+                                  ? "bg-gray-100 text-gray-400 line-through"
+                                  : "bg-gray-100 text-gray-500"
+                                }`}
+                            >
+                              {name || (transaction.bucketId ? "Deleted" : "No Bucket")}
+                            </span>
+                          );
+                        })()}
                       </td>
                       {(onEdit || onDelete) && (
                         <td className="px-6 py-4 text-right">
@@ -486,11 +493,14 @@ export function TransactionList({
                                 maximumFractionDigits: 0
                               }).format(transaction.amount)}
                             </p>
-                            {transaction.bucketId && (
-                              <span className="inline-block px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded text-[10px] font-medium mt-1">
-                                {getBucketName(transaction.bucketId)}
-                              </span>
-                            )}
+                            {transaction.bucketId && (() => {
+                              const name = getBucketName(transaction.bucketId);
+                              return (
+                                <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-medium mt-1 ${name ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-400 line-through"}`}>
+                                  {name || "Deleted"}
+                                </span>
+                              );
+                            })()}
                           </div>
                         </div>
 

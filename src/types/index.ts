@@ -53,5 +53,9 @@ export interface Bucket {
   constraint: "all" | "workdays" | "weekends";
   rollover: boolean;
   isMealTracker?: boolean;
+  archived?: boolean;
+  createdAt?: string; // ISO date string for when the bucket was created
   targetAccountId?: string; // Optional: specific account to check liquidity against
+  rolloverSnapshot?: number; // Frozen rollover when daily rate changed mid-month
+  rolloverSnapshotDate?: string; // YYYY-MM-DD when the snapshot was taken
 }

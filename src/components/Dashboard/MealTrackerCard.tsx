@@ -47,11 +47,22 @@ export function MealTrackerCard({
     const todayStartTime = todayStart.getTime();
 
     // 1. Calculate Workdays in Current Month and Prior Workdays
+    // Only count from bucket creation date (if created mid-month)
     const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+    let startDay = 1;
+    if (bucket.createdAt) {
+      const created = new Date(bucket.createdAt + "T00:00:00");
+      if (
+        created.getFullYear() === currentYear &&
+        created.getMonth() === currentMonth
+      ) {
+        startDay = created.getDate();
+      }
+    }
     let workdaysCount = 0;
     let workdaysPrior = 0;
 
-    for (let day = 1; day <= daysInMonth; day++) {
+    for (let day = startDay; day <= daysInMonth; day++) {
       const loopDate = new Date(currentYear, currentMonth, day);
       const dayOfWeek = loopDate.getDay();
 
@@ -59,7 +70,6 @@ export function MealTrackerCard({
       if (dayOfWeek !== 0 && dayOfWeek !== 6) {
         workdaysCount++;
         // Use strict timestamp comparison
-        // loopDate is 00:00 by default in the loop construction above
         if (loopDate.getTime() < todayStartTime) {
           workdaysPrior++;
         }
@@ -83,10 +93,57 @@ export function MealTrackerCard({
       })
       .reduce((sum, t) => sum + t.amount, 0);
 
-    // 4. Calculate Rollover (Leftovers or Deficit from previous days)
-    // Allowance accrued until yesterday = workdaysPrior * dailyAllowance
-    const accruedPrior = workdaysPrior * dailyAllowance;
-    const rollover = accruedPrior - spentPrior;
+    // 4. Calculate Rollover (snapshot-aware for mid-month rate changes)
+    let rollover: number;
+    if (
+      bucket.rolloverSnapshot !== undefined &&
+      bucket.rolloverSnapshotDate
+    ) {
+      const snapDate = new Date(bucket.rolloverSnapshotDate + "T00:00:00");
+      if (
+        snapDate.getMonth() === currentMonth &&
+        snapDate.getFullYear() === currentYear
+      ) {
+        // Valid snapshot: compute rollover since snapshot at CURRENT rate
+        let wdSinceSnap = 0;
+        let spentSinceSnap = 0;
+        for (let day = 1; day <= daysInMonth; day++) {
+          const d = new Date(currentYear, currentMonth, day);
+          const dow = d.getDay();
+          if (
+            dow !== 0 &&
+            dow !== 6 &&
+            d.getTime() >= snapDate.getTime() &&
+            d.getTime() < todayStartTime
+          ) {
+            wdSinceSnap++;
+          }
+        }
+        spentSinceSnap = transactions
+          .filter((t) => {
+            const tDate = new Date(t.date);
+            return (
+              t.type === "expense" &&
+              t.bucketId === bucket.id &&
+              tDate.getMonth() === currentMonth &&
+              tDate.getFullYear() === currentYear &&
+              tDate.getTime() >= snapDate.getTime() &&
+              tDate.getTime() < todayStartTime
+            );
+          })
+          .reduce((sum, t) => sum + t.amount, 0);
+        rollover =
+          bucket.rolloverSnapshot +
+          wdSinceSnap * dailyAllowance -
+          spentSinceSnap;
+      } else {
+        // Snapshot from a different month — ignore, compute fresh
+        rollover = workdaysPrior * dailyAllowance - spentPrior;
+      }
+    } else {
+      // No snapshot — original logic
+      rollover = workdaysPrior * dailyAllowance - spentPrior;
+    }
 
     // 5. Calculate Spent Today
     const spentToday = transactions
@@ -103,15 +160,18 @@ export function MealTrackerCard({
       .reduce((sum, t) => sum + t.amount, 0);
 
     // 6. Calculate Remaining Today
-    // Available Today = Daily Base + Rollover
     const availableToday = dailyAllowance + rollover;
     const remainingToday = availableToday - spentToday;
 
-    // 7. Projected Monthly Total & Remaining Monthly
-    const monthlyTotal = dailyAllowance * workdaysCount;
-    // Total spent so far (prior + today)
+    // 7. Monthly calculations (effective, works with mixed rates)
     const totalSpentSoFar = spentPrior + spentToday;
-    const remainingMonthly = monthlyTotal - totalSpentSoFar;
+    const todayDow = now.getDay();
+    const isTodayWorkday = todayDow !== 0 && todayDow !== 6;
+    const remainingWorkdaysAfterToday =
+      workdaysCount - workdaysPrior - (isTodayWorkday ? 1 : 0);
+    const remainingMonthly =
+      remainingToday + remainingWorkdaysAfterToday * dailyAllowance;
+    const monthlyTotal = totalSpentSoFar + remainingMonthly;
 
     // 8. Grid Data for Visualization
     const gridData = [];
@@ -272,12 +332,12 @@ export function MealTrackerCard({
               title={`Day ${dayData.day}: ${formatCurrency(dayData.spent)} ${!dayData.isWorkday ? "(Weekend)" : ""
                 }`}
               className={`w-3 h-3 rounded-sm transition-all ${dayData.status === "full"
-                  ? "bg-red-500"
-                  : dayData.status === "partial"
-                    ? "bg-orange-400"
-                    : dayData.isWorkday
-                      ? "bg-gray-200"
-                      : "bg-gray-100 border border-gray-200" // Lighter for weekends
+                ? "bg-red-500"
+                : dayData.status === "partial"
+                  ? "bg-orange-400"
+                  : dayData.isWorkday
+                    ? "bg-gray-200"
+                    : "bg-gray-100 border border-gray-200" // Lighter for weekends
                 }`}
             />
           ))}
@@ -297,8 +357,8 @@ export function MealTrackerCard({
         return (
           <div
             className={`mt-4 mx-4 mb-2 p-3 rounded-lg border ${isLiquid
-                ? "bg-blue-50 border-blue-100 text-blue-800"
-                : "bg-red-50 border-red-100 text-red-800"
+              ? "bg-blue-50 border-blue-100 text-blue-800"
+              : "bg-red-50 border-red-100 text-red-800"
               }`}
           >
             <div className="flex justify-between items-center text-xs mb-1">

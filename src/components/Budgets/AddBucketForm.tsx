@@ -9,7 +9,8 @@ interface AddBucketFormProps {
 }
 
 export function AddBucketForm({ onClose, editingBucket }: AddBucketFormProps) {
-  const { addBucket, updateBucket, categories, accounts } = useMoney();
+  const { addBucket, updateBucket, categories, accounts, transactions } =
+    useMoney();
   const isEditMode = !!editingBucket;
 
   // Type: 'standard' | 'meal-tracker' | 'weekend-flex'
@@ -86,12 +87,110 @@ export function AddBucketForm({ onClose, editingBucket }: AddBucketFormProps) {
     }
   };
 
+  // Compute the current rollover for a meal tracker at its current (old) rate
+  const computeCurrentRollover = (): number => {
+    if (!editingBucket) return 0;
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+    const currentDay = now.getDate();
+    const todayStart = new Date(currentYear, currentMonth, currentDay, 0, 0, 0, 0);
+    const todayStartTime = todayStart.getTime();
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+    // Check for existing valid snapshot
+    if (
+      editingBucket.rolloverSnapshot !== undefined &&
+      editingBucket.rolloverSnapshotDate
+    ) {
+      const snapDate = new Date(editingBucket.rolloverSnapshotDate + "T00:00:00");
+      if (
+        snapDate.getMonth() === currentMonth &&
+        snapDate.getFullYear() === currentYear
+      ) {
+        let wdSinceSnap = 0;
+        let spentSinceSnap = 0;
+        for (let day = 1; day <= daysInMonth; day++) {
+          const d = new Date(currentYear, currentMonth, day);
+          const dow = d.getDay();
+          if (
+            dow !== 0 &&
+            dow !== 6 &&
+            d.getTime() >= snapDate.getTime() &&
+            d.getTime() < todayStartTime
+          ) {
+            wdSinceSnap++;
+          }
+        }
+        spentSinceSnap = transactions
+          .filter((t) => {
+            const tDate = new Date(t.date);
+            return (
+              t.type === "expense" &&
+              t.bucketId === editingBucket.id &&
+              tDate.getMonth() === currentMonth &&
+              tDate.getFullYear() === currentYear &&
+              tDate.getTime() >= snapDate.getTime() &&
+              tDate.getTime() < todayStartTime
+            );
+          })
+          .reduce((sum, t) => sum + t.amount, 0);
+        return (
+          editingBucket.rolloverSnapshot +
+          wdSinceSnap * editingBucket.limit -
+          spentSinceSnap
+        );
+      }
+    }
+
+    // No valid snapshot — compute from scratch at current (old) rate
+    let workdaysPrior = 0;
+    for (let day = 1; day <= daysInMonth; day++) {
+      const d = new Date(currentYear, currentMonth, day);
+      const dow = d.getDay();
+      if (dow !== 0 && dow !== 6 && d.getTime() < todayStartTime) {
+        workdaysPrior++;
+      }
+    }
+    const spentPrior = transactions
+      .filter((t) => {
+        const tDate = new Date(t.date);
+        return (
+          t.type === "expense" &&
+          t.bucketId === editingBucket.id &&
+          tDate.getMonth() === currentMonth &&
+          tDate.getFullYear() === currentYear &&
+          tDate.getTime() < todayStartTime
+        );
+      })
+      .reduce((sum, t) => sum + t.amount, 0);
+    return workdaysPrior * editingBucket.limit - spentPrior;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const newLimit = parseFloat(limit) || 0;
+
+    // Determine rollover snapshot values
+    let rolloverSnapshotValue = editingBucket?.rolloverSnapshot;
+    let rolloverSnapshotDateValue = editingBucket?.rolloverSnapshotDate;
+
+    if (
+      isEditMode &&
+      editingBucket &&
+      bucketType === "meal-tracker" &&
+      newLimit !== editingBucket.limit
+    ) {
+      // Daily limit changed — freeze the current rollover
+      rolloverSnapshotValue = computeCurrentRollover();
+      const now = new Date();
+      rolloverSnapshotDateValue = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+    }
+
     const bucketData = {
       name,
-      limit: parseFloat(limit) || 0,
+      limit: newLimit,
       categoryIds: selectedCategories,
       color,
       period,
@@ -99,12 +198,22 @@ export function AddBucketForm({ onClose, editingBucket }: AddBucketFormProps) {
       rollover: editingBucket?.rollover || false,
       isMealTracker: bucketType === "meal-tracker",
       targetAccountId: targetAccountId || undefined,
+      ...(rolloverSnapshotValue !== undefined && {
+        rolloverSnapshot: rolloverSnapshotValue,
+      }),
+      ...(rolloverSnapshotDateValue !== undefined && {
+        rolloverSnapshotDate: rolloverSnapshotDateValue,
+      }),
     };
 
     if (isEditMode && editingBucket) {
       await updateBucket(editingBucket.id, bucketData);
     } else {
-      await addBucket(bucketData as any);
+      const now = new Date();
+      await addBucket({
+        ...bucketData,
+        createdAt: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`,
+      } as any);
     }
     onClose();
   };
@@ -132,11 +241,10 @@ export function AddBucketForm({ onClose, editingBucket }: AddBucketFormProps) {
                 type.id as "standard" | "meal-tracker" | "weekend-flex",
               )
             }
-            className={`flex flex-col items-center justify-center p-2 rounded-lg border-2 transition-all ${
-              bucketType === type.id
-                ? "border-teal-500 bg-teal-50 text-teal-700"
-                : "border-gray-100 bg-white text-gray-500 hover:bg-gray-50"
-            }`}
+            className={`flex flex-col items-center justify-center p-2 rounded-lg border-2 transition-all ${bucketType === type.id
+              ? "border-teal-500 bg-teal-50 text-teal-700"
+              : "border-gray-100 bg-white text-gray-500 hover:bg-gray-50"
+              }`}
           >
             <type.icon size={20} className="mb-1" />
             <span className="text-[10px] font-bold uppercase text-center leading-tight">
@@ -188,11 +296,10 @@ export function AddBucketForm({ onClose, editingBucket }: AddBucketFormProps) {
                 value={period}
                 disabled={bucketType !== "standard"}
                 onChange={(e) => setPeriod(e.target.value as Bucket["period"])}
-                className={`w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-teal-500 ${
-                  bucketType !== "standard"
-                    ? "bg-gray-100 text-gray-500"
-                    : "bg-white"
-                }`}
+                className={`w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-teal-500 ${bucketType !== "standard"
+                  ? "bg-gray-100 text-gray-500"
+                  : "bg-white"
+                  }`}
               >
                 <option value="monthly">Monthly</option>
                 <option value="weekly">Weekly</option>
@@ -210,11 +317,10 @@ export function AddBucketForm({ onClose, editingBucket }: AddBucketFormProps) {
                 onChange={(e) =>
                   setConstraint(e.target.value as Bucket["constraint"])
                 }
-                className={`w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-teal-500 ${
-                  bucketType !== "standard"
-                    ? "bg-gray-100 text-gray-500"
-                    : "bg-white"
-                }`}
+                className={`w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-teal-500 ${bucketType !== "standard"
+                  ? "bg-gray-100 text-gray-500"
+                  : "bg-white"
+                  }`}
               >
                 <option value="all">All Days</option>
                 <option value="workdays">Mon-Fri Only</option>
@@ -303,18 +409,16 @@ export function AddBucketForm({ onClose, editingBucket }: AddBucketFormProps) {
                   <div
                     key={cat.id}
                     onClick={() => toggleCategory(cat.id)}
-                    className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${
-                      selectedCategories.includes(cat.id)
-                        ? "bg-teal-50 border border-teal-200"
-                        : "hover:bg-gray-50"
-                    }`}
+                    className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${selectedCategories.includes(cat.id)
+                      ? "bg-teal-50 border border-teal-200"
+                      : "hover:bg-gray-50"
+                      }`}
                   >
                     <div
-                      className={`w-3 h-3 rounded-full ${
-                        selectedCategories.includes(cat.id)
-                          ? "bg-teal-500"
-                          : "bg-gray-300"
-                      }`}
+                      className={`w-3 h-3 rounded-full ${selectedCategories.includes(cat.id)
+                        ? "bg-teal-500"
+                        : "bg-gray-300"
+                        }`}
                     />
                     <span className="text-sm text-gray-700">{cat.name}</span>
                   </div>
