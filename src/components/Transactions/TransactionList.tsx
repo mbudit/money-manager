@@ -9,6 +9,7 @@ import {
   ChevronUp,
   ChevronDown,
   Calendar,
+  Plus,
 } from "lucide-react";
 import type { Transaction, Account, Category, Bucket } from "../../types";
 import { format } from "date-fns";
@@ -20,6 +21,7 @@ interface TransactionListProps {
   buckets?: Bucket[];
   onEdit?: (transaction: Transaction) => void;
   onDelete?: (id: string) => void;
+  onAdd?: (defaultDate: string) => void;
 }
 
 type SortField = "date" | "category" | "account" | "amount";
@@ -40,6 +42,7 @@ export function TransactionList({
   buckets = [],
   onEdit,
   onDelete,
+  onAdd,
 }: TransactionListProps) {
   const [sortField, setSortField] = useState<SortField>("date");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
@@ -140,6 +143,17 @@ export function TransactionList({
       maximumFractionDigits: 0,
     }).format(amount);
 
+  // Compute default datetime for a day group (date from group + time from latest transaction)
+  const getDefaultDateForGroup = (group: DayGroup): string => {
+    const latestTx = [...group.transactions].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    )[0];
+    if (latestTx) {
+      return format(new Date(latestTx.date), "yyyy-MM-dd'T'HH:mm");
+    }
+    return `${group.dateKey}T12:00`;
+  };
+
   if (transactions.length === 0) {
     return (
       <div className="text-center py-12 bg-white rounded-xl border border-gray-100">
@@ -235,6 +249,15 @@ export function TransactionList({
                           <span className="text-red-600">
                             -{formatCurrency(group.totalExpense)}
                           </span>
+                        )}
+                        {onAdd && (
+                          <button
+                            onClick={() => onAdd(getDefaultDateForGroup(group))}
+                            className="ml-1 p-1 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded-full transition-colors"
+                            title="Add transaction for this day"
+                          >
+                            <Plus size={16} />
+                          </button>
                         )}
                       </div>
                     </div>
@@ -385,6 +408,15 @@ export function TransactionList({
                       -{formatCurrency(group.totalExpense)}
                     </span>
                   )}
+                  {onAdd && (
+                    <button
+                      onClick={() => onAdd(getDefaultDateForGroup(group))}
+                      className="ml-1 p-1 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded-full transition-colors"
+                      title="Add transaction for this day"
+                    >
+                      <Plus size={16} />
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -441,10 +473,10 @@ export function TransactionList({
                           <div className="text-right shrink-0">
                             <p
                               className={`font-semibold ${isExpense
-                                  ? "text-red-600"
-                                  : isIncome
-                                    ? "text-teal-600"
-                                    : "text-gray-900"
+                                ? "text-red-600"
+                                : isIncome
+                                  ? "text-teal-600"
+                                  : "text-gray-900"
                                 }`}
                             >
                               {isExpense ? "-" : isIncome ? "+" : ""}

@@ -9,6 +9,7 @@ interface AddTransactionModalProps {
   isOpen: boolean;
   onClose: () => void;
   transaction?: Transaction; // Optional: for edit mode
+  defaultDate?: string; // Optional: pre-fill date (yyyy-MM-dd'T'HH:mm format)
 }
 
 type TabType = "expense" | "income" | "transfer";
@@ -17,6 +18,7 @@ export function AddTransactionModal({
   isOpen,
   onClose,
   transaction,
+  defaultDate,
 }: AddTransactionModalProps) {
   const isEditMode = !!transaction;
   const {
@@ -57,6 +59,9 @@ export function AddTransactionModal({
       setNote(transaction.note || "");
       setSelectedBucketId(transaction.bucketId || "");
       setIsRecurring(false); // Can't edit as recurring
+    } else if (isOpen && !transaction) {
+      // Opening fresh (not edit mode) — use defaultDate if provided
+      setDate(defaultDate || format(new Date(), "yyyy-MM-dd'T'HH:mm"));
     } else if (!isOpen) {
       // Reset form when modal closes
       setActiveTab("expense");
