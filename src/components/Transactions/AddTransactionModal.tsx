@@ -285,11 +285,13 @@ export function AddTransactionModal({
               className="w-full px-3 py-2 border border-blue-200 bg-blue-50 rounded-lg outline-none focus:ring-2 focus:ring-teal-500 text-blue-800"
             >
               <option value="">-- No Bucket Filter --</option>
-              {buckets.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {b.name} ({b.period})
-                </option>
-              ))}
+              {buckets
+                .filter((b) => !b.archived || b.id === selectedBucketId)
+                .map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.name} ({b.period})
+                  </option>
+                ))}
             </select>
           </div>
         )}
