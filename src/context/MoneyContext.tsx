@@ -56,6 +56,7 @@ interface MoneyContextType {
   addBucket: (bucket: Omit<Bucket, "id">) => Promise<void>;
   updateBucket: (id: string, data: Partial<Bucket>) => Promise<void>;
   deleteBucket: (id: string) => Promise<void>;
+  hardDeleteBucket: (id: string) => Promise<void>;
   loading: boolean;
 }
 
@@ -612,7 +613,13 @@ const MoneyProviderInner = ({ children }: { children: ReactNode }) => {
     if (!user) return;
     await updateDoc(doc(db, `users/${user.uid}/buckets`, id), {
       archived: true,
+      archivedAt: new Date().toISOString(),
     });
+  };
+
+  const hardDeleteBucket = async (id: string) => {
+    if (!user) return;
+    await deleteDoc(doc(db, `users/${user.uid}/buckets`, id));
   };
 
   return (
@@ -636,6 +643,7 @@ const MoneyProviderInner = ({ children }: { children: ReactNode }) => {
         addBucket,
         updateBucket,
         deleteBucket,
+        hardDeleteBucket,
         loading,
       }}
     >

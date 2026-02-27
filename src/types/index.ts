@@ -54,6 +54,7 @@ export interface Bucket {
   rollover: boolean;
   isMealTracker?: boolean;
   archived?: boolean;
+  archivedAt?: string; // ISO date string when bucket was archived
   createdAt?: string; // ISO date string for when the bucket was created
   targetAccountId?: string; // Optional: specific account to check liquidity against
   rolloverSnapshot?: number; // Frozen rollover when daily rate changed mid-month

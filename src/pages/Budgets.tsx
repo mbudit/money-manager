@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, AlertTriangle } from "lucide-react";
+import { Plus, AlertTriangle, Archive, RotateCcw, Trash2 } from "lucide-react";
 import { useMoney } from "@/context/MoneyContext";
 import { Modal } from "@/components/UI/Modal";
 import { MealTrackerCard } from "@/components/Dashboard/MealTrackerCard";
@@ -8,12 +8,26 @@ import { BudgetCard } from "@/components/Budgets/BudgetCard";
 import type { Bucket } from "@/types";
 
 export function Budgets() {
-  const { buckets, categories, transactions, accounts, deleteBucket } =
-    useMoney();
+  const {
+    buckets,
+    categories,
+    transactions,
+    accounts,
+    deleteBucket,
+    updateBucket,
+    hardDeleteBucket,
+  } = useMoney();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingBucket, setEditingBucket] = useState<Bucket | undefined>(
     undefined,
   );
+  const [showArchived, setShowArchived] = useState(false);
+
+  const archivedBuckets = buckets.filter((b) => b.archived);
+
+  const handleRestore = async (id: string) => {
+    await updateBucket(id, { archived: false });
+  };
 
   const handleEdit = (bucket: Bucket) => {
     setEditingBucket(bucket);
@@ -90,13 +104,30 @@ export function Budgets() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-gray-800">Budgets (Buckets)</h2>
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
-        >
-          <Plus size={20} />
-          <span>Add Bucket</span>
-        </button>
+        <div className="flex items-center gap-2">
+          {archivedBuckets.length > 0 && (
+            <button
+              onClick={() => setShowArchived(!showArchived)}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm font-medium ${showArchived
+                ? "bg-gray-200 text-gray-700"
+                : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                }`}
+            >
+              <Archive size={16} />
+              <span className="hidden md:inline">Archived</span>
+              <span className="bg-gray-300 text-gray-700 text-xs px-1.5 py-0.5 rounded-full">
+                {archivedBuckets.length}
+              </span>
+            </button>
+          )}
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
+          >
+            <Plus size={20} />
+            <span>Add Bucket</span>
+          </button>
+        </div>
       </div>
 
       {/* Global Liquidity Check (Reconciliation) */}
@@ -276,6 +307,63 @@ export function Budgets() {
           </div>
         )}
       </div>
+
+      {/* Archived Buckets Section */}
+      {showArchived && archivedBuckets.length > 0 && (
+        <div className="mt-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
+          <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-3">
+            Archived Buckets
+          </h3>
+          <div className="space-y-2">
+            {archivedBuckets.map((bucket) => (
+              <div
+                key={bucket.id}
+                className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-100"
+              >
+                <div>
+                  <p className="font-medium text-gray-700">{bucket.name}</p>
+                  <p className="text-xs text-gray-400">
+                    {bucket.isMealTracker ? "Meal Tracker" : "Standard"}
+                    {" · "}
+                    {formatCurrency(bucket.limit)}
+                    {bucket.isMealTracker ? "/day" : `/${bucket.period}`}
+                    {bucket.archivedAt && (
+                      <>
+                        {" · Archived "}
+                        {new Date(bucket.archivedAt).toLocaleDateString("id-ID", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </>
+                    )}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleRestore(bucket.id)}
+                    className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-teal-700 bg-teal-50 hover:bg-teal-100 rounded-lg transition-colors"
+                  >
+                    <RotateCcw size={14} />
+                    Restore
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (confirm("Permanently delete this bucket? This cannot be undone.")) {
+                        hardDeleteBucket(bucket.id);
+                      }
+                    }}
+                    className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+                    title="Permanently delete"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <Modal
         isOpen={isModalOpen}
