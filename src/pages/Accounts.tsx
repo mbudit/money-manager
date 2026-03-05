@@ -7,6 +7,8 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { useMoney } from "../context/MoneyContext";
 import { useState, useMemo, useEffect } from "react";
@@ -15,8 +17,14 @@ import type { Account, TransactionType } from "../types";
 import { TransactionList } from "../components/Transactions/TransactionList";
 
 export function Accounts() {
-  const { accounts, deleteAccount, transactions, categories, buckets } =
-    useMoney();
+  const {
+    accounts,
+    deleteAccount,
+    updateAccount,
+    transactions,
+    categories,
+    buckets,
+  } = useMoney();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
 
@@ -60,6 +68,11 @@ export function Accounts() {
   const handleAdd = () => {
     setEditingAccount(null);
     setIsModalOpen(true);
+  };
+
+  const handleToggleIncluded = (account: Account) => {
+    const newValue = account.includedInTotal === false ? true : false;
+    updateAccount(account.id, { includedInTotal: newValue });
   };
 
   const filteredTransactions = useMemo(() => {
@@ -148,76 +161,99 @@ export function Accounts() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {accounts.map((account) => (
-          <div
-            key={account.id}
-            className="p-6 bg-white rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition-shadow relative overflow-hidden"
-          >
+        {accounts.map((account) => {
+          const isExcluded = account.includedInTotal === false;
+          return (
             <div
-              className="absolute top-0 right-0 w-24 h-24 transform translate-x-8 -translate-y-8 rounded-full opacity-10"
-              style={{ backgroundColor: account.color }}
-            />
+              key={account.id}
+              className={`p-6 bg-white rounded-xl shadow-md border hover:shadow-lg transition-all relative overflow-hidden ${
+                isExcluded ? "border-gray-200 opacity-60" : "border-gray-100"
+              }`}
+            >
+              <div
+                className="absolute top-0 right-0 w-24 h-24 transform translate-x-8 -translate-y-8 rounded-full opacity-10"
+                style={{ backgroundColor: account.color }}
+              />
 
-            <div className="relative z-10">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">
-                    {account.type}
-                  </p>
-                  <h3 className="text-xl font-bold text-gray-900 mt-1">
-                    {account.name}
-                  </h3>
-                </div>
-                <div className="flex flex-col gap-2 items-end">
-                  <div
-                    className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg"
-                    style={{ backgroundColor: account.color }}
-                  >
-                    {account.name.charAt(0)}
+              <div className="relative z-10">
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">
+                      {account.type}
+                    </p>
+                    <h3 className="text-xl font-bold text-gray-900 mt-1">
+                      {account.name}
+                    </h3>
                   </div>
-                  <div className="flex gap-1">
-                    <button
-                      onClick={() => setViewingTransactionsAccount(account)}
-                      className="p-1.5 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors"
-                      title="View Transactions"
+                  <div className="flex flex-col gap-2 items-end">
+                    <div
+                      className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg"
+                      style={{ backgroundColor: account.color }}
                     >
-                      <ArrowRightLeft size={16} />
-                    </button>
-                    <button
-                      onClick={() => handleEdit(account)}
-                      className="p-1.5 text-blue-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                      title="Edit Account"
-                    >
-                      <Pencil size={16} />
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (
-                          window.confirm(
-                            "Are you sure you want to delete this account?",
-                          )
-                        ) {
-                          deleteAccount(account.id);
+                      {account.name.charAt(0)}
+                    </div>
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => handleToggleIncluded(account)}
+                        className={`p-1.5 rounded-lg transition-colors ${
+                          isExcluded
+                            ? "text-gray-400 hover:text-teal-600 hover:bg-teal-50"
+                            : "text-teal-500 hover:text-teal-700 hover:bg-teal-50"
+                        }`}
+                        title={
+                          isExcluded ? "Include in total" : "Exclude from total"
                         }
-                      }}
-                      className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      title="Delete Account"
-                    >
-                      <Trash2 size={16} />
-                    </button>
+                      >
+                        {isExcluded ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                      <button
+                        onClick={() => setViewingTransactionsAccount(account)}
+                        className="p-1.5 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors"
+                        title="View Transactions"
+                      >
+                        <ArrowRightLeft size={16} />
+                      </button>
+                      <button
+                        onClick={() => handleEdit(account)}
+                        className="p-1.5 text-blue-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        title="Edit Account"
+                      >
+                        <Pencil size={16} />
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (
+                            window.confirm(
+                              "Are you sure you want to delete this account?",
+                            )
+                          ) {
+                            deleteAccount(account.id);
+                          }
+                        }}
+                        className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Delete Account"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="mt-8">
-                <p className="text-sm text-gray-400 mb-1">Current Balance</p>
-                <p className="text-2xl font-bold text-gray-900 tracking-tight">
-                  {formatCurrency(account.balance)}
-                </p>
+                <div className="mt-8">
+                  <p className="text-sm text-gray-400 mb-1">Current Balance</p>
+                  <p className="text-2xl font-bold text-gray-900 tracking-tight">
+                    {formatCurrency(account.balance)}
+                  </p>
+                  {isExcluded && (
+                    <p className="text-xs text-gray-400 mt-1 italic">
+                      Excluded from total
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <Modal

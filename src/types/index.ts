@@ -6,6 +6,7 @@ export interface Account {
   type: 'bank' | 'cash' | 'ewallet';
   balance: number;
   color: string;
+  includedInTotal?: boolean;
 }
 
 export interface Category {

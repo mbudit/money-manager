@@ -6,7 +6,11 @@ import { Wallet, ArrowUp, ArrowDown } from "lucide-react";
 export function Dashboard() {
   const { accounts, transactions, categories, buckets } = useMoney();
 
-  const totalBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0);
+  const includedAccounts = accounts.filter((a) => a.includedInTotal !== false);
+  const totalBalance = includedAccounts.reduce(
+    (sum, acc) => sum + acc.balance,
+    0,
+  );
 
   // Calculate this month's income and expense
   const now = new Date();
@@ -53,7 +57,8 @@ export function Dashboard() {
           </h2>
           <p className="text-teal-100 text-sm mt-2">
             {" "}
-            across {accounts.length} accounts
+            across {includedAccounts.length} account
+            {includedAccounts.length !== 1 ? "s" : ""}
           </p>
         </div>
 
