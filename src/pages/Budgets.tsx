@@ -108,10 +108,11 @@ export function Budgets() {
           {archivedBuckets.length > 0 && (
             <button
               onClick={() => setShowArchived(!showArchived)}
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm font-medium ${showArchived
-                ? "bg-gray-200 text-gray-700"
-                : "bg-gray-100 text-gray-500 hover:bg-gray-200"
-                }`}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
+                showArchived
+                  ? "bg-gray-200 text-gray-700"
+                  : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+              }`}
             >
               <Archive size={16} />
               <span className="hidden md:inline">Archived</span>
@@ -132,120 +133,130 @@ export function Budgets() {
 
       {/* Global Liquidity Check (Reconciliation) */}
       {(() => {
-        const totalCash = accounts.reduce((sum, acc) => sum + acc.balance, 0);
+        const totalCash = accounts
+          .filter((a) => a.includedInTotal !== false)
+          .reduce((sum, acc) => sum + acc.balance, 0);
 
-        const totalRemainingNeeded = buckets.filter((b) => !b.archived).reduce((sum, bucket) => {
-          // 1. Calculate Spent for this bucket
-          let spent = 0;
-          let limit = bucket.limit;
+        const totalRemainingNeeded = buckets
+          .filter((b) => !b.archived)
+          .reduce((sum, bucket) => {
+            // 1. Calculate Spent for this bucket
+            let spent = 0;
+            let limit = bucket.limit;
 
-          if (bucket.isMealTracker) {
-            // Meal Tracker Logic: Calculate Monthly Limit based on Workdays
-            const now = new Date();
-            const currentYear = now.getFullYear();
-            const currentMonth = now.getMonth();
-            const daysInMonth = new Date(
-              currentYear,
-              currentMonth + 1,
-              0,
-            ).getDate();
+            if (bucket.isMealTracker) {
+              // Meal Tracker Logic: Calculate Monthly Limit based on Workdays
+              const now = new Date();
+              const currentYear = now.getFullYear();
+              const currentMonth = now.getMonth();
+              const daysInMonth = new Date(
+                currentYear,
+                currentMonth + 1,
+                0,
+              ).getDate();
 
-            // Respect bucket creation date (don't count workdays before it existed)
-            let startDay = 1;
-            if (bucket.createdAt) {
-              const created = new Date(bucket.createdAt + "T00:00:00");
-              if (
-                created.getFullYear() === currentYear &&
-                created.getMonth() === currentMonth
-              ) {
-                startDay = created.getDate();
+              // Respect bucket creation date (don't count workdays before it existed)
+              let startDay = 1;
+              if (bucket.createdAt) {
+                const created = new Date(bucket.createdAt + "T00:00:00");
+                if (
+                  created.getFullYear() === currentYear &&
+                  created.getMonth() === currentMonth
+                ) {
+                  startDay = created.getDate();
+                }
               }
+
+              let workdaysCount = 0;
+              for (let day = startDay; day <= daysInMonth; day++) {
+                const date = new Date(currentYear, currentMonth, day);
+                const dayOfWeek = date.getDay();
+                if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+                  workdaysCount++;
+                }
+              }
+
+              // Real Monthly Limit for Meal Tracker
+              limit = bucket.limit * workdaysCount;
+
+              // Spent strictly this month
+              spent = transactions
+                .filter((t) => {
+                  const tDate = new Date(t.date);
+                  return (
+                    t.type === "expense" &&
+                    t.bucketId === bucket.id &&
+                    tDate.getMonth() === currentMonth &&
+                    tDate.getFullYear() === currentYear
+                  );
+                })
+                .reduce((s, t) => s + t.amount, 0);
+            } else {
+              // Standard Bucket Logic
+              spent = getBucketSpent(
+                bucket.id,
+                bucket.period || "monthly",
+                bucket.constraint || "all",
+              );
             }
 
-            let workdaysCount = 0;
-            for (let day = startDay; day <= daysInMonth; day++) {
-              const date = new Date(currentYear, currentMonth, day);
-              const dayOfWeek = date.getDay();
-              if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-                workdaysCount++;
-              }
-            }
-
-            // Real Monthly Limit for Meal Tracker
-            limit = bucket.limit * workdaysCount;
-
-            // Spent strictly this month
-            spent = transactions
-              .filter((t) => {
-                const tDate = new Date(t.date);
-                return (
-                  t.type === "expense" &&
-                  t.bucketId === bucket.id &&
-                  tDate.getMonth() === currentMonth &&
-                  tDate.getFullYear() === currentYear
-                );
-              })
-              .reduce((s, t) => s + t.amount, 0);
-          } else {
-            // Standard Bucket Logic
-            spent = getBucketSpent(
-              bucket.id,
-              bucket.period || "monthly",
-              bucket.constraint || "all",
-            );
-          }
-
-          // Remaining needed for this bucket
-          const remaining = Math.max(0, limit - spent);
-          return sum + remaining;
-        }, 0);
+            // Remaining needed for this bucket
+            const remaining = Math.max(0, limit - spent);
+            return sum + remaining;
+          }, 0);
 
         const diff = totalCash - totalRemainingNeeded;
         const isOverAllocated = diff < -1000; // Tolerance
 
         return (
           <div
-            className={`p-4 rounded-xl border ${isOverAllocated
-              ? "bg-red-50 border-red-100"
-              : "bg-teal-50 border-teal-100"
-              }`}
+            className={`p-4 rounded-xl border ${
+              isOverAllocated
+                ? "bg-red-50 border-red-100"
+                : "bg-teal-50 border-teal-100"
+            }`}
           >
             <div className="flex items-start gap-3">
               <div
-                className={`p-2 rounded-full ${isOverAllocated
-                  ? "bg-red-100 text-red-600"
-                  : "bg-teal-100 text-teal-600"
-                  }`}
+                className={`p-2 rounded-full ${
+                  isOverAllocated
+                    ? "bg-red-100 text-red-600"
+                    : "bg-teal-100 text-teal-600"
+                }`}
               >
                 <AlertTriangle size={20} />
               </div>
               <div className="flex-1">
                 <div className="flex justify-between items-center">
                   <h3
-                    className={`font-bold ${isOverAllocated ? "text-red-800" : "text-teal-800"
-                      }`}
+                    className={`font-bold ${
+                      isOverAllocated ? "text-red-800" : "text-teal-800"
+                    }`}
                   >
                     {isOverAllocated
                       ? "Insufficient Funds"
                       : "Budget Solvency Check"}
                   </h3>
                   <span
-                    className={`text-xs font-bold px-2 py-1 rounded-full ${isOverAllocated
-                      ? "bg-red-200 text-red-700"
-                      : "bg-teal-200 text-teal-700"
-                      }`}
+                    className={`text-xs font-bold px-2 py-1 rounded-full ${
+                      isOverAllocated
+                        ? "bg-red-200 text-red-700"
+                        : "bg-teal-200 text-teal-700"
+                    }`}
                   >
                     {isOverAllocated ? formatCurrency(diff) : "Liquid"}
                   </span>
                 </div>
 
                 <p
-                  className={`text-sm mt-1 ${isOverAllocated ? "text-red-600" : "text-teal-600"
-                    }`}
+                  className={`text-sm mt-1 ${
+                    isOverAllocated ? "text-red-600" : "text-teal-600"
+                  }`}
                 >
                   Real: <strong>{formatCurrency(totalCash)}</strong>
                   <span className="mx-1">vs</span>
-                  Remaining: <strong>{formatCurrency(totalRemainingNeeded)}</strong>
+                  Remaining:{" "}
+                  <strong>{formatCurrency(totalRemainingNeeded)}</strong>
                   <span className="mx-2">|</span>
                   <span className="font-bold">
                     {diff >= 0 ? "Surplus: " : "Deficit: "}
@@ -255,7 +266,8 @@ export function Budgets() {
 
                 {isOverAllocated && (
                   <p className="text-xs mt-2 font-medium opacity-90 text-red-600">
-                    Warning: You don't have enough cash to cover the remaining budget for this month.
+                    Warning: You don't have enough cash to cover the remaining
+                    budget for this month.
                   </p>
                 )}
               </div>
@@ -265,38 +277,40 @@ export function Budgets() {
       })()}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {buckets.filter((b) => !b.archived).map((bucket) => {
-          if (bucket.isMealTracker) {
+        {buckets
+          .filter((b) => !b.archived)
+          .map((bucket) => {
+            if (bucket.isMealTracker) {
+              return (
+                <MealTrackerCard
+                  key={bucket.id}
+                  bucket={bucket}
+                  onEdit={handleEdit}
+                  onDelete={deleteBucket}
+                />
+              );
+            }
+
+            const spent = getBucketSpent(
+              bucket.id,
+              bucket.period || "monthly",
+              bucket.constraint || "all",
+            );
+
             return (
-              <MealTrackerCard
+              <BudgetCard
                 key={bucket.id}
                 bucket={bucket}
+                spent={spent}
+                categories={categories}
+                transactions={transactions}
+                accounts={accounts}
                 onEdit={handleEdit}
                 onDelete={deleteBucket}
+                formatCurrency={formatCurrency}
               />
             );
-          }
-
-          const spent = getBucketSpent(
-            bucket.id,
-            bucket.period || "monthly",
-            bucket.constraint || "all",
-          );
-
-          return (
-            <BudgetCard
-              key={bucket.id}
-              bucket={bucket}
-              spent={spent}
-              categories={categories}
-              transactions={transactions}
-              accounts={accounts}
-              onEdit={handleEdit}
-              onDelete={deleteBucket}
-              formatCurrency={formatCurrency}
-            />
-          );
-        })}
+          })}
 
         {buckets.length === 0 && (
           <div className="col-span-full p-8 text-center text-gray-400 bg-gray-50 rounded-xl border-dashed border-2 border-gray-200">
@@ -330,11 +344,14 @@ export function Budgets() {
                     {bucket.archivedAt && (
                       <>
                         {" · Archived "}
-                        {new Date(bucket.archivedAt).toLocaleDateString("id-ID", {
-                          day: "numeric",
-                          month: "short",
-                          year: "numeric",
-                        })}
+                        {new Date(bucket.archivedAt).toLocaleDateString(
+                          "id-ID",
+                          {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          },
+                        )}
                       </>
                     )}
                   </p>
@@ -349,7 +366,11 @@ export function Budgets() {
                   </button>
                   <button
                     onClick={() => {
-                      if (confirm("Permanently delete this bucket? This cannot be undone.")) {
+                      if (
+                        confirm(
+                          "Permanently delete this bucket? This cannot be undone.",
+                        )
+                      ) {
                         hardDeleteBucket(bucket.id);
                       }
                     }}
