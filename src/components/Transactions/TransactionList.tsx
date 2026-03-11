@@ -143,13 +143,15 @@ export function TransactionList({
       maximumFractionDigits: 0,
     }).format(amount);
 
-  // Compute default datetime for a day group (date from group + time from latest transaction)
+  // Compute default datetime for a day group (1 min after latest so it appears at top)
   const getDefaultDateForGroup = (group: DayGroup): string => {
     const latestTx = [...group.transactions].sort(
       (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
     )[0];
     if (latestTx) {
-      return format(new Date(latestTx.date), "yyyy-MM-dd'T'HH:mm");
+      const latestDate = new Date(latestTx.date);
+      latestDate.setMinutes(latestDate.getMinutes() + 1);
+      return format(latestDate, "yyyy-MM-dd'T'HH:mm");
     }
     return `${group.dateKey}T12:00`;
   };
