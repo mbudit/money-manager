@@ -194,7 +194,8 @@ export function Reports() {
                       ))}
                     </Pie>
                     <Tooltip
-                      formatter={(value: string | number | undefined) => [
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      formatter={(value: any) => [
                         formatCurrency(Number(value ?? 0)),
                         "Amount",
                       ]}
