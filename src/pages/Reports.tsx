@@ -194,10 +194,8 @@ export function Reports() {
                       ))}
                     </Pie>
                     <Tooltip
-                      formatter={(value: number | undefined) => [
-                        value !== undefined
-                          ? formatCurrency(value)
-                          : "Rp 0",
+                      formatter={(value: string | number | undefined) => [
+                        formatCurrency(Number(value ?? 0)),
                         "Amount",
                       ]}
                       contentStyle={{
