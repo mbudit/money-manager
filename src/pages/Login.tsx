@@ -14,21 +14,21 @@ const Login = () => {
   }, [user, navigate]);
 
   return (
-    <div className="min-h-screen bg-[#F3F4F6] flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl shadow-lg p-8 max-w-md w-full text-center">
+    <div className="min-h-screen bg-[#F3F4F6] dark:bg-gray-900 flex items-center justify-center p-4 transition-colors">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 max-w-md w-full text-center">
         <div className="flex justify-center mb-6">
-          <div className="bg-emerald-100 p-4 rounded-full">
-            <LogIn className="w-12 h-12 text-emerald-600" />
+          <div className="bg-emerald-100 dark:bg-emerald-900/40 p-4 rounded-full">
+            <LogIn className="w-12 h-12 text-emerald-600 dark:text-emerald-400" />
           </div>
         </div>
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Welcome Back</h1>
-        <p className="text-gray-600 mb-8">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Welcome Back</h1>
+        <p className="text-gray-600 dark:text-gray-400 mb-8">
           Sign in to access your money manager
         </p>
 
         <button
           onClick={signIn}
-          className="w-full bg-white border border-gray-300 text-gray-700 font-medium py-3 px-4 rounded-lg flex items-center justify-center hover:bg-gray-50 transition-colors gap-3"
+          className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 font-medium py-3 px-4 rounded-lg flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors gap-3"
         >
           {/* Simple Google G icon SVG */}
           <svg className="w-5 h-5" viewBox="0 0 24 24">

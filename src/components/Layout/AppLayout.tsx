@@ -6,6 +6,7 @@ import { PiggyBank, LogOut } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useUI } from "../../context/UIContext";
 import { AddTransactionModal } from "../Transactions/AddTransactionModal";
+import { ThemeToggle } from "../UI/ThemeToggle";
 
 export function Layout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -17,24 +18,27 @@ export function Layout() {
   } = useUI();
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
       {/* Mobile Header */}
-      <div className="md:hidden bg-white border-b border-gray-200 p-4 sticky top-0 z-30 flex items-center justify-between gap-3">
+      <div className="md:hidden bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 sticky top-0 z-30 flex items-center justify-between gap-3 transition-colors duration-200">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-teal-600 rounded-lg flex items-center justify-center text-white">
             <PiggyBank size={18} />
           </div>
-          <h1 className="text-lg font-bold text-gray-900">Money Manager</h1>
+          <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">Money Manager</h1>
         </div>
-        <button
-          onClick={logout}
-          className="p-2 text-gray-500 hover:text-red-600 transition-colors"
-          title="Sign Out"
-        >
-          <LogOut size={20} />
-        </button>
+        <div className="flex items-center gap-1">
+          <ThemeToggle />
+          <button
+            onClick={logout}
+            className="p-2 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+            title="Sign Out"
+          >
+            <LogOut size={20} />
+          </button>
+        </div>
       </div>
 
       <main className="md:pl-64 min-h-screen transition-all duration-300 pb-20 md:pb-0">
@@ -53,7 +57,3 @@ export function Layout() {
     </div>
   );
 }
-
-// Temporary placeholder for AppLayout export to match App.tsx import
-// In App.tsx I imported `Layout` from `./components/Layout/AppLayout`
-// but I'm saving this file as AppLayout.tsx so it should export Layout.

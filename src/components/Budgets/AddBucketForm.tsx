@@ -242,8 +242,8 @@ export function AddBucketForm({ onClose, editingBucket }: AddBucketFormProps) {
               )
             }
             className={`flex flex-col items-center justify-center p-2 rounded-lg border-2 transition-all ${bucketType === type.id
-              ? "border-teal-500 bg-teal-50 text-teal-700"
-              : "border-gray-100 bg-white text-gray-500 hover:bg-gray-50"
+              ? "border-teal-500 bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400"
+              : "border-gray-100 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-600"
               }`}
           >
             <type.icon size={20} className="mb-1" />
@@ -258,7 +258,7 @@ export function AddBucketForm({ onClose, editingBucket }: AddBucketFormProps) {
         {/* Left Column: Main Inputs */}
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Bucket Name
             </label>
             <input
@@ -266,13 +266,13 @@ export function AddBucketForm({ onClose, editingBucket }: AddBucketFormProps) {
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
               placeholder="e.g., Fixed Costs, Groceries"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               {bucketType === "meal-tracker"
                 ? "Daily Allowance"
                 : "Monthly Limit"}
@@ -282,23 +282,23 @@ export function AddBucketForm({ onClose, editingBucket }: AddBucketFormProps) {
               required
               value={limit}
               onChange={(e) => setLimit(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
               placeholder="0.00"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Period
               </label>
               <select
                 value={period}
                 disabled={bucketType !== "standard"}
                 onChange={(e) => setPeriod(e.target.value as Bucket["period"])}
-                className={`w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-teal-500 ${bucketType !== "standard"
-                  ? "bg-gray-100 text-gray-500"
-                  : "bg-white"
+                className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg outline-none focus:ring-2 focus:ring-teal-500 ${bucketType !== "standard"
+                  ? "bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400"
+                  : "bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   }`}
               >
                 <option value="monthly">Monthly</option>
@@ -308,7 +308,7 @@ export function AddBucketForm({ onClose, editingBucket }: AddBucketFormProps) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Constraint
               </label>
               <select
@@ -317,9 +317,9 @@ export function AddBucketForm({ onClose, editingBucket }: AddBucketFormProps) {
                 onChange={(e) =>
                   setConstraint(e.target.value as Bucket["constraint"])
                 }
-                className={`w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-teal-500 ${bucketType !== "standard"
-                  ? "bg-gray-100 text-gray-500"
-                  : "bg-white"
+                className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg outline-none focus:ring-2 focus:ring-teal-500 ${bucketType !== "standard"
+                  ? "bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400"
+                  : "bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   }`}
               >
                 <option value="all">All Days</option>
@@ -331,13 +331,13 @@ export function AddBucketForm({ onClose, editingBucket }: AddBucketFormProps) {
 
           {/* Account Link Selection */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Link to Account (Optional)
             </label>
             <select
               value={targetAccountId}
               onChange={(e) => setTargetAccountId(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-teal-500 bg-white"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg outline-none focus:ring-2 focus:ring-teal-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
             >
               <option value="">-- No Specific Account Linked --</option>
               {accounts.map((acc) => (
@@ -356,19 +356,19 @@ export function AddBucketForm({ onClose, editingBucket }: AddBucketFormProps) {
         {/* Right Column: Context & Categories */}
         <div className="space-y-4 flex flex-col">
           {bucketType === "meal-tracker" && (
-            <div className="bg-orange-50 p-4 rounded-lg border border-orange-100">
+            <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg border border-orange-100 dark:border-orange-800">
               <div className="flex items-start gap-3">
                 <div className="bg-orange-100 p-2 rounded-full text-orange-600 mt-1">
                   <CalendarDays size={16} />
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-orange-800">
+                  <h4 className="text-sm font-bold text-orange-800 dark:text-orange-400">
                     Meal Tracker Logic
                   </h4>
                   <p className="text-xs text-orange-600 mt-1">
                     Auto-calculates daily allowance based on workdays (Mon-Fri).
                   </p>
-                  <div className="mt-3 bg-white p-2 rounded border border-orange-200">
+                  <div className="mt-3 bg-white dark:bg-gray-800 p-2 rounded border border-orange-200 dark:border-orange-800">
                     <p className="text-xs text-gray-500">Preview:</p>
                     <div className="flex justify-between items-center text-sm">
                       <span>
@@ -390,7 +390,7 @@ export function AddBucketForm({ onClose, editingBucket }: AddBucketFormProps) {
           )}
 
           {bucketType === "weekend-flex" && (
-            <div className="bg-purple-50 p-3 rounded-lg border border-purple-100">
+            <div className="bg-purple-50 dark:bg-purple-900/20 p-3 rounded-lg border border-purple-100 dark:border-purple-800">
               <p className="text-xs text-purple-700 flex items-center gap-2">
                 <Armchair size={16} />
                 Only counts transactions on <strong>Weekends (Sat/Sun)</strong>.
@@ -399,10 +399,10 @@ export function AddBucketForm({ onClose, editingBucket }: AddBucketFormProps) {
           )}
 
           <div className="flex-1 flex flex-col">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Link Categories
             </label>
-            <div className="flex-1 min-h-[160px] max-h-[300px] overflow-y-auto border border-gray-200 rounded-lg p-2 space-y-1">
+            <div className="flex-1 min-h-[160px] max-h-[300px] overflow-y-auto border border-gray-200 dark:border-gray-600 rounded-lg p-2 space-y-1 bg-white dark:bg-gray-700">
               {categories
                 .filter((c) => c.type === "expense")
                 .map((cat) => (
@@ -410,8 +410,8 @@ export function AddBucketForm({ onClose, editingBucket }: AddBucketFormProps) {
                     key={cat.id}
                     onClick={() => toggleCategory(cat.id)}
                     className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${selectedCategories.includes(cat.id)
-                      ? "bg-teal-50 border border-teal-200"
-                      : "hover:bg-gray-50"
+                      ? "bg-teal-50 dark:bg-teal-900/30 border border-teal-200 dark:border-teal-800"
+                      : "hover:bg-gray-50 dark:hover:bg-gray-600"
                       }`}
                   >
                     <div
@@ -420,7 +420,7 @@ export function AddBucketForm({ onClose, editingBucket }: AddBucketFormProps) {
                         : "bg-gray-300"
                         }`}
                     />
-                    <span className="text-sm text-gray-700">{cat.name}</span>
+                    <span className="text-sm text-gray-700 dark:text-gray-300">{cat.name}</span>
                   </div>
                 ))}
               {categories.filter((c) => c.type === "expense").length === 0 && (
@@ -437,7 +437,7 @@ export function AddBucketForm({ onClose, editingBucket }: AddBucketFormProps) {
         <button
           type="button"
           onClick={onClose}
-          className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium"
+          className="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 font-medium"
         >
           Cancel
         </button>

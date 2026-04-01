@@ -47,7 +47,7 @@ export function BudgetCard({
     accounts.find((a) => a.id === id)?.name || "Unknown";
 
   return (
-    <div className="p-6 bg-white rounded-xl shadow-md border border-gray-100">
+    <div className="p-6 bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-100 dark:border-gray-700 transition-colors">
       <div className="flex justify-between items-start mb-4">
         <div className="flex items-center gap-3">
           <div
@@ -57,14 +57,14 @@ export function BudgetCard({
             <Wallet size={20} />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-gray-900">{bucket.name}</h3>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">{bucket.name}</h3>
             <div className="flex flex-wrap gap-1 mt-1">
               {bucket.categoryIds.map((catId) => {
                 const cat = categories.find((c) => c.id === catId);
                 return cat ? (
                   <span
                     key={catId}
-                    className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full"
+                    className="text-xs px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full"
                   >
                     {cat.name}
                   </span>
@@ -77,16 +77,16 @@ export function BudgetCard({
               )}
             </div>
             <div className="flex gap-2 mt-2">
-              <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 bg-blue-50 text-blue-600 rounded-md border border-blue-100">
+              <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-md border border-blue-100 dark:border-blue-800">
                 {bucket.period || "Monthly"}
               </span>
               {bucket.constraint && bucket.constraint !== "all" && (
-                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 bg-purple-50 text-purple-600 rounded-md border border-purple-100">
+                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-md border border-purple-100 dark:border-purple-800">
                   {bucket.constraint === "workdays" ? "Mon-Fri" : "Weekends"}
                 </span>
               )}
               {bucket.rollover && (
-                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 bg-amber-50 text-amber-600 rounded-md border border-amber-100">
+                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-md border border-amber-100 dark:border-amber-800">
                   Rollover
                 </span>
               )}
@@ -96,7 +96,7 @@ export function BudgetCard({
         <div className="flex flex-col items-end gap-1">
           <button
             onClick={() => onEdit(bucket)}
-            className="text-gray-400 hover:text-teal-600 text-sm"
+            className="text-gray-400 hover:text-teal-600 dark:hover:text-teal-400 text-sm"
           >
             Edit
           </button>
@@ -104,7 +104,7 @@ export function BudgetCard({
             onClick={() => {
               if (confirm("Delete this bucket?")) onDelete(bucket.id);
             }}
-            className="text-gray-400 hover:text-red-500 text-sm"
+            className="text-gray-400 hover:text-red-500 dark:hover:text-red-400 text-sm"
           >
             Delete
           </button>
@@ -113,15 +113,15 @@ export function BudgetCard({
 
       <div className="space-y-2">
         <div className="flex justify-between text-sm font-medium">
-          <span className={isOverBudget ? "text-red-600" : "text-gray-600"}>
+          <span className={isOverBudget ? "text-red-600 dark:text-red-400" : "text-gray-600 dark:text-gray-300"}>
             {formatCurrency(spent)}
           </span>
-          <span className="text-gray-400">
+          <span className="text-gray-400 dark:text-gray-500">
             of {formatCurrency(bucket.limit)}
           </span>
         </div>
 
-        <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
+        <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
           <div
             className={`h-full rounded-full transition-all duration-500 ${isOverBudget ? "bg-red-500" : "bg-teal-500"
               }`}
@@ -148,8 +148,8 @@ export function BudgetCard({
           return (
             <div
               className={`mt-3 p-3 rounded-lg border ${isLiquid
-                  ? "bg-blue-50 border-blue-100 text-blue-800"
-                  : "bg-red-50 border-red-100 text-red-800"
+                  ? "bg-blue-50 dark:bg-blue-900/20 border-blue-100 dark:border-blue-800 text-blue-800 dark:text-blue-300"
+                  : "bg-red-50 dark:bg-red-900/20 border-red-100 dark:border-red-800 text-red-800 dark:text-red-300"
                 }`}
             >
               <div className="flex justify-between items-center text-xs mb-1">
@@ -176,7 +176,7 @@ export function BudgetCard({
       {/* View Transactions Toggle */}
       <button
         onClick={() => setShowTransactions(!showTransactions)}
-        className="mt-4 w-full flex items-center justify-center gap-2 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+        className="mt-4 w-full flex items-center justify-center gap-2 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors"
       >
         {showTransactions ? (
           <>
@@ -193,7 +193,7 @@ export function BudgetCard({
 
       {/* Transactions List */}
       {showTransactions && (
-        <div className="mt-3 border-t border-gray-100 pt-3">
+        <div className="mt-3 border-t border-gray-100 dark:border-gray-700 pt-3">
           {bucketTransactions.length === 0 ? (
             <p className="text-sm text-gray-400 text-center py-4">
               No transactions in this bucket yet
@@ -203,14 +203,14 @@ export function BudgetCard({
               {bucketTransactions.map((tx) => (
                 <div
                   key={tx.id}
-                  className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg"
+                  className="flex items-center justify-between py-2 px-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 flex items-center justify-center shrink-0">
                       <ArrowDownLeft size={14} />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm font-medium text-gray-800">
+                      <p className="text-sm font-medium text-gray-800 dark:text-gray-200">
                         {getCategoryName(tx.categoryId)}
                       </p>
                       <p className="text-xs text-gray-400">
@@ -224,7 +224,7 @@ export function BudgetCard({
                       )}
                     </div>
                   </div>
-                  <span className="text-sm font-bold text-red-600">
+                  <span className="text-sm font-bold text-red-600 dark:text-red-400">
                     -{formatCurrency(tx.amount)}
                   </span>
                 </div>

@@ -99,7 +99,7 @@ export function Transactions() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-800">Transactions</h2>
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Transactions</h2>
         <button
           onClick={() => {
             setEditingTransaction(undefined);
@@ -118,19 +118,19 @@ export function Transactions() {
         <div className="relative flex-1">
           <Search
             size={20}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500"
           />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by category, account, note, or amount..."
-            className="w-full pl-10 pr-10 py-3 border border-gray-200 rounded-xl bg-white outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+            className="w-full pl-10 pr-10 py-3 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
             >
               <X size={18} />
             </button>
@@ -143,20 +143,20 @@ export function Transactions() {
             type="date"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
-            className="px-4 py-3 border border-gray-200 rounded-xl bg-white outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all text-gray-600"
+            className="px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
           />
           <input
             type="date"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
-            className="px-4 py-3 border border-gray-200 rounded-xl bg-white outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all text-gray-600"
+            className="px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
           />
         </div>
       </div>
 
       {/* Results info when searching */}
       {(searchQuery || startDate || endDate) && (
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-gray-500 dark:text-gray-400">
           Found {filteredTransactions.length} transaction
           {filteredTransactions.length !== 1 ? "s" : ""}
           {searchQuery && ` matching "${searchQuery}"`}

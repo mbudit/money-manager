@@ -118,34 +118,34 @@ export function Reports() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-800">Expenses Analysis</h2>
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Expenses Analysis</h2>
 
-        <div className="flex items-center gap-4 bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-100">
+        <div className="flex items-center gap-4 bg-white dark:bg-gray-800 px-4 py-2 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700">
           <button
             onClick={() => navigateMonth("prev")}
-            className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
           >
-            <ChevronLeft size={20} className="text-gray-600" />
+            <ChevronLeft size={20} className="text-gray-600 dark:text-gray-300" />
           </button>
-          <span className="font-medium text-gray-900 min-w-[120px] text-center">
+          <span className="font-medium text-gray-900 dark:text-gray-100 min-w-[120px] text-center">
             {format(currentDate, "MMMM yyyy")}
           </span>
           <button
             onClick={() => navigateMonth("next")}
-            className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
           >
-            <ChevronRight size={20} className="text-gray-600" />
+            <ChevronRight size={20} className="text-gray-600 dark:text-gray-300" />
           </button>
         </div>
       </div>
 
       {monthExpenses.length === 0 ? (
         /* Empty state */
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 flex flex-col items-center justify-center text-center">
-          <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-12 flex flex-col items-center justify-center text-center">
+          <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mb-4">
             <Receipt size={28} className="text-gray-400" />
           </div>
-          <h3 className="text-lg font-semibold text-gray-700 mb-1">
+          <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-1">
             No expenses this month
           </h3>
           <p className="text-gray-400 text-sm">
@@ -158,9 +158,9 @@ export function Reports() {
           {/* Left column: Chart + Summary */}
           <div className="lg:col-span-1 space-y-4">
             {/* Summary card */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-              <p className="text-sm text-gray-500 mb-1">Total Expenses</p>
-              <p className="text-3xl font-bold text-gray-900">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Total Expenses</p>
+              <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">
                 {formatCurrency(totalExpenses)}
               </p>
               <p className="text-xs text-gray-400 mt-1">
@@ -172,8 +172,8 @@ export function Reports() {
             </div>
 
             {/* Donut chart */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-              <h3 className="text-sm font-semibold text-gray-700 mb-3">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
                 Category Breakdown
               </h3>
               <div className="h-56 relative">
@@ -213,7 +213,7 @@ export function Reports() {
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <div className="text-center">
                     <p className="text-xs text-gray-400">Total</p>
-                    <p className="text-sm font-bold text-gray-800">
+                    <p className="text-sm font-bold text-gray-800 dark:text-gray-200">
                       {formatCurrency(totalExpenses)}
                     </p>
                   </div>
@@ -232,7 +232,7 @@ export function Reports() {
                         className="w-2.5 h-2.5 rounded-full shrink-0"
                         style={{ backgroundColor: cat.color }}
                       />
-                      <span className="text-gray-600 truncate max-w-[120px]">
+                      <span className="text-gray-600 dark:text-gray-400 truncate max-w-[120px]">
                         {cat.name}
                       </span>
                     </div>
@@ -247,7 +247,7 @@ export function Reports() {
 
           {/* Right column: Category cards */}
           <div className="lg:col-span-2 space-y-3">
-            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+            <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
               By Category
             </h3>
 
@@ -256,7 +256,7 @@ export function Reports() {
               return (
                 <div
                   key={cat.categoryId}
-                  className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden transition-shadow hover:shadow-md"
+                  className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-shadow hover:shadow-md"
                 >
                   {/* Category header — clickable */}
                   <button
@@ -277,16 +277,16 @@ export function Reports() {
                     {/* Info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1">
-                        <span className="font-semibold text-gray-800 truncate">
+                        <span className="font-semibold text-gray-800 dark:text-gray-200 truncate">
                           {cat.name}
                         </span>
-                        <span className="font-bold text-gray-900 ml-4 shrink-0">
+                        <span className="font-bold text-gray-900 dark:text-gray-100 ml-4 shrink-0">
                           {formatCurrency(cat.total)}
                         </span>
                       </div>
                       {/* Progress bar */}
                       <div className="flex items-center gap-3">
-                        <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                        <div className="flex-1 h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                           <div
                             className="h-full rounded-full transition-all duration-500"
                             style={{
@@ -318,7 +318,7 @@ export function Reports() {
                     }}
                   >
                     <div className="overflow-hidden">
-                      <div className="border-t border-gray-100">
+                      <div className="border-t border-gray-100 dark:border-gray-700">
                         {cat.transactions.map((tx, i) => (
                           <div
                             key={tx.id}
@@ -332,23 +332,23 @@ export function Reports() {
                               <span className="text-xs text-gray-400 shrink-0 w-14">
                                 {format(new Date(tx.date), "dd MMM")}
                               </span>
-                              <span className="text-sm text-gray-600 truncate">
+                              <span className="text-sm text-gray-600 dark:text-gray-400 truncate">
                                 {tx.note || "—"}
                               </span>
                             </div>
-                            <span className="text-sm font-medium text-gray-800 ml-4 shrink-0">
+                            <span className="text-sm font-medium text-gray-800 dark:text-gray-200 ml-4 shrink-0">
                               {formatCurrency(tx.amount)}
                             </span>
                           </div>
                         ))}
 
                         {/* Subtotal row */}
-                        <div className="flex items-center justify-between px-4 py-3 bg-gray-50">
-                          <span className="text-xs font-medium text-gray-500">
+                        <div className="flex items-center justify-between px-4 py-3 bg-gray-50 dark:bg-gray-700/50">
+                          <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
                             {cat.transactions.length} transaction
                             {cat.transactions.length !== 1 ? "s" : ""}
                           </span>
-                          <span className="text-sm font-bold text-gray-700">
+                          <span className="text-sm font-bold text-gray-700 dark:text-gray-200">
                             {formatCurrency(cat.total)}
                           </span>
                         </div>

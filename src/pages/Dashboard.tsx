@@ -63,31 +63,31 @@ export function Dashboard() {
         </div>
 
         {/* Income */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-teal-100 text-teal-600 rounded-lg">
+            <div className="p-2 bg-teal-100 dark:bg-teal-900/40 text-teal-600 dark:text-teal-400 rounded-lg">
               <ArrowUp size={24} />
             </div>
-            <span className="font-medium text-gray-500">
+            <span className="font-medium text-gray-500 dark:text-gray-400">
               Income (This Month)
             </span>
           </div>
-          <h2 className="text-2xl font-bold text-gray-900">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
             {formatCurrency(income)}
           </h2>
         </div>
 
         {/* Expense */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-red-100 text-red-600 rounded-lg">
+            <div className="p-2 bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 rounded-lg">
               <ArrowDown size={24} />
             </div>
-            <span className="font-medium text-gray-500">
+            <span className="font-medium text-gray-500 dark:text-gray-400">
               Expense (This Month)
             </span>
           </div>
-          <h2 className="text-2xl font-bold text-gray-900">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
             {formatCurrency(expense)}
           </h2>
         </div>
@@ -95,7 +95,7 @@ export function Dashboard() {
 
       {/* Recent Activity */}
       <div>
-        <h3 className="text-lg font-bold text-gray-900 mb-4">
+        <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">
           Recent Activity
         </h3>
         <TransactionList

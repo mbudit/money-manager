@@ -222,7 +222,7 @@ export function MealTrackerCard({
   };
 
   return (
-    <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl p-6 border border-orange-100 shadow-sm relative overflow-hidden group">
+    <div className="bg-gradient-to-br from-orange-50 to-amber-50 dark:from-gray-800 dark:to-gray-800 rounded-xl p-6 border border-orange-100 dark:border-orange-900/40 shadow-sm relative overflow-hidden group transition-colors">
       {/* Decorative Icon Background */}
       <div className="absolute -right-4 -bottom-4 text-orange-100 opacity-50">
         <Utensils size={120} />
@@ -247,11 +247,11 @@ export function MealTrackerCard({
 
       <div className="relative z-10">
         <div className="flex items-center gap-2 mb-4">
-          <div className="bg-orange-100 p-2 rounded-lg text-orange-600">
+          <div className="bg-orange-100 dark:bg-orange-900/40 p-2 rounded-lg text-orange-600 dark:text-orange-400">
             <Utensils size={20} />
           </div>
           <div>
-            <h3 className="font-bold text-gray-800">{bucket.name}</h3>
+            <h3 className="font-bold text-gray-800 dark:text-gray-100">{bucket.name}</h3>
             <p className="text-xs text-orange-600 font-medium uppercase tracking-wide">
               {bucket.constraint === "workdays"
                 ? "Workday Meal Logic"
@@ -263,7 +263,7 @@ export function MealTrackerCard({
         <div className="grid grid-cols-2 gap-4">
           <div>
             <p className="text-xs text-gray-500 mb-1">Daily Allowance</p>
-            <p className="text-lg font-bold text-gray-700">
+            <p className="text-lg font-bold text-gray-700 dark:text-gray-200">
               {formatCurrency(trackerData.dailyAllowance)}
             </p>
             {/* Show leftover indicator only when there are leftovers available */}
@@ -336,8 +336,8 @@ export function MealTrackerCard({
                 : dayData.status === "partial"
                   ? "bg-orange-400"
                   : dayData.isWorkday
-                    ? "bg-gray-200"
-                    : "bg-gray-100 border border-gray-200" // Lighter for weekends
+                    ? "bg-gray-200 dark:bg-gray-600"
+                    : "bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600" // Lighter for weekends
                 }`}
             />
           ))}
@@ -357,8 +357,8 @@ export function MealTrackerCard({
         return (
           <div
             className={`mt-4 mx-4 mb-2 p-3 rounded-lg border ${isLiquid
-              ? "bg-blue-50 border-blue-100 text-blue-800"
-              : "bg-red-50 border-red-100 text-red-800"
+              ? "bg-blue-50 dark:bg-blue-900/20 border-blue-100 dark:border-blue-800 text-blue-800 dark:text-blue-300"
+              : "bg-red-50 dark:bg-red-900/20 border-red-100 dark:border-red-800 text-red-800 dark:text-red-300"
               }`}
           >
             <div className="flex justify-between items-center text-xs mb-1">
@@ -412,14 +412,14 @@ export function MealTrackerCard({
               {bucketTransactions.map((tx) => (
                 <div
                   key={tx.id}
-                  className="flex items-center justify-between py-2 px-3 bg-white/60 rounded-lg"
+                  className="flex items-center justify-between py-2 px-3 bg-white/60 dark:bg-gray-700/50 rounded-lg"
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center shrink-0">
                       <ArrowDownLeft size={14} />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm font-medium text-gray-800">
+                      <p className="text-sm font-medium text-gray-800 dark:text-gray-200">
                         {getCategoryName(tx.categoryId)}
                       </p>
                       <p className="text-xs text-gray-400">

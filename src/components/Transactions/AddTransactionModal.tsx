@@ -155,12 +155,12 @@ export function AddTransactionModal({
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={isEditMode ? "Edit Transaction" : "Add Transaction"}>
-      <div className="flex p-1 bg-gray-100 rounded-lg mb-6">
+      <div className="flex p-1 bg-gray-100 dark:bg-gray-700 rounded-lg mb-6">
         <button
           onClick={() => setActiveTab("expense")}
           className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-md transition-all ${activeTab === "expense"
-            ? "bg-white text-red-600 shadow-sm"
-            : "text-gray-500 hover:text-gray-700"
+            ? "bg-white dark:bg-gray-600 text-red-600 dark:text-red-400 shadow-sm"
+            : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
             }`}
         >
           <ArrowDownLeft size={16} /> Expense
@@ -168,8 +168,8 @@ export function AddTransactionModal({
         <button
           onClick={() => setActiveTab("income")}
           className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-md transition-all ${activeTab === "income"
-            ? "bg-white text-teal-600 shadow-sm"
-            : "text-gray-500 hover:text-gray-700"
+            ? "bg-white dark:bg-gray-600 text-teal-600 dark:text-teal-400 shadow-sm"
+            : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
             }`}
         >
           <ArrowUpRight size={16} /> Income
@@ -177,8 +177,8 @@ export function AddTransactionModal({
         <button
           onClick={() => setActiveTab("transfer")}
           className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-md transition-all ${activeTab === "transfer"
-            ? "bg-white text-blue-600 shadow-sm"
-            : "text-gray-500 hover:text-gray-700"
+            ? "bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-400 shadow-sm"
+            : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
             }`}
         >
           <ArrowRight size={16} /> Transfer
@@ -188,7 +188,7 @@ export function AddTransactionModal({
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Recurring Toggle - Hide in edit mode */}
         {!isEditMode && (
-          <div className="flex items-center gap-2 mb-4 p-3 bg-gray-50 rounded-lg border border-gray-100">
+          <div className="flex items-center gap-2 mb-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-100 dark:border-gray-600">
             <input
               type="checkbox"
               id="recurring"
@@ -198,7 +198,7 @@ export function AddTransactionModal({
             />
             <label
               htmlFor="recurring"
-              className="text-sm font-medium text-gray-700 select-none"
+              className="text-sm font-medium text-gray-700 dark:text-gray-300 select-none"
             >
               Repeat this transaction?
             </label>
@@ -207,7 +207,7 @@ export function AddTransactionModal({
 
         {isRecurring && (
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">
+            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
               Frequency
             </label>
             <select
@@ -217,7 +217,7 @@ export function AddTransactionModal({
                   e.target.value as RecurringTransaction["frequency"],
                 )
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
             >
               <option value="daily">Daily</option>
               <option value="weekly">Weekly</option>
@@ -229,7 +229,7 @@ export function AddTransactionModal({
 
         {/* Date Input */}
         <div>
-          <label className="block text-xs font-medium text-gray-500 mb-1">
+          <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
             {isRecurring ? "Start Date" : "Date & Time"}
           </label>
           <input
@@ -238,17 +238,17 @@ export function AddTransactionModal({
             value={date}
             onChange={(e) => setDate(e.target.value)}
             onFocus={handleScrollToView}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
           />
         </div>
 
         {/* Amount Input */}
         <div>
-          <label className="block text-xs font-medium text-gray-500 mb-1">
+          <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
             Amount
           </label>
           <div className="relative">
-            <span className="absolute left-3 top-2 text-gray-500 font-medium">
+            <span className="absolute left-3 top-2 text-gray-500 dark:text-gray-400 font-medium">
               Rp
             </span>
             <input
@@ -264,7 +264,7 @@ export function AddTransactionModal({
                 setAmount(formatted);
               }}
               onFocus={handleScrollToView}
-              className="w-full pl-10 pr-3 py-2 text-lg font-bold text-gray-900 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+              className="w-full pl-10 pr-3 py-2 text-lg font-bold text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-lg outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white dark:bg-gray-700"
               placeholder="0"
             />
           </div>
@@ -273,7 +273,7 @@ export function AddTransactionModal({
         {/* Bucket Filter (Optional) */}
         {activeTab === "expense" && (
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">
+            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
               Filter by Bucket (Optional)
             </label>
             <select
@@ -282,7 +282,7 @@ export function AddTransactionModal({
                 setSelectedBucketId(e.target.value);
                 setCategoryId(""); // Reset category when bucket changes to avoid invalid state
               }}
-              className="w-full px-3 py-2 border border-blue-200 bg-blue-50 rounded-lg outline-none focus:ring-2 focus:ring-teal-500 text-blue-800"
+              className="w-full px-3 py-2 border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/30 rounded-lg outline-none focus:ring-2 focus:ring-teal-500 text-blue-800 dark:text-blue-300"
             >
               <option value="">-- No Bucket Filter --</option>
               {buckets
@@ -299,14 +299,14 @@ export function AddTransactionModal({
         {/* Categories (Income/Expense Only) */}
         {activeTab !== "transfer" && (
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">
+            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
               {selectedBucketId ? "Bucket Category" : "Category"}
             </label>
             <select
               required
               value={categoryId}
               onChange={(e) => setCategoryId(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
             >
               <option value="">Select Category</option>
               {filteredCategories.map((c) => (
@@ -321,14 +321,14 @@ export function AddTransactionModal({
         {/* Account Selection */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">
+            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
               {activeTab === "transfer" ? "From Account" : "Account"}
             </label>
             <select
               required
               value={accountId}
               onChange={(e) => setAccountId(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
             >
               <option value="">Select Account</option>
               {accounts.map((a) => (
@@ -341,14 +341,14 @@ export function AddTransactionModal({
 
           {activeTab === "transfer" && (
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">
+              <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
                 To Account
               </label>
               <select
                 required
                 value={toAccountId}
                 onChange={(e) => setToAccountId(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
               >
                 <option value="">Select Account</option>
                 {accounts
@@ -365,7 +365,7 @@ export function AddTransactionModal({
 
         {/* Note */}
         <div>
-          <label className="block text-xs font-medium text-gray-500 mb-1">
+          <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
             Note (Optional)
           </label>
           <input
@@ -373,7 +373,7 @@ export function AddTransactionModal({
             value={note}
             onChange={(e) => setNote(e.target.value)}
             onFocus={handleScrollToView}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
             placeholder="Add a note..."
           />
         </div>

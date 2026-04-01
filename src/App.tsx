@@ -11,6 +11,7 @@ import { Layout } from "@/components/Layout/AppLayout";
 import { MoneyProvider } from "@/context/MoneyContext";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { UIProvider } from "@/context/UIContext";
+import { ThemeProvider } from "@/context/ThemeContext";
 
 // Wrapper around lazy() that auto-reloads the page once on chunk load failure.
 // This handles stale chunks after a new Vercel deployment.
@@ -65,7 +66,7 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
@@ -80,41 +81,43 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
 
 function App() {
   return (
-    <AuthProvider>
-      <MoneyProvider>
-        <UIProvider>
-          <Router>
-            <Suspense
-              fallback={
-                <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                </div>
-              }
-            >
-              <Routes>
-                <Route path="/login" element={<Login />} />
-                <Route
-                  path="/"
-                  element={
-                    <RequireAuth>
-                      <Layout />
-                    </RequireAuth>
-                  }
-                >
-                  <Route index element={<Dashboard />} />
-                  <Route path="transactions" element={<Transactions />} />
-                  <Route path="accounts" element={<Accounts />} />
-                  <Route path="budgets" element={<Budgets />} />
-                  <Route path="categories" element={<Categories />} />
-                  <Route path="reports" element={<Reports />} />
-                  <Route path="*" element={<Navigate to="/" replace />} />
-                </Route>
-              </Routes>
-            </Suspense>
-          </Router>
-        </UIProvider>
-      </MoneyProvider>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <MoneyProvider>
+          <UIProvider>
+            <Router>
+              <Suspense
+                fallback={
+                  <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                  </div>
+                }
+              >
+                <Routes>
+                  <Route path="/login" element={<Login />} />
+                  <Route
+                    path="/"
+                    element={
+                      <RequireAuth>
+                        <Layout />
+                      </RequireAuth>
+                    }
+                  >
+                    <Route index element={<Dashboard />} />
+                    <Route path="transactions" element={<Transactions />} />
+                    <Route path="accounts" element={<Accounts />} />
+                    <Route path="budgets" element={<Budgets />} />
+                    <Route path="categories" element={<Categories />} />
+                    <Route path="reports" element={<Reports />} />
+                    <Route path="*" element={<Navigate to="/" replace />} />
+                  </Route>
+                </Routes>
+              </Suspense>
+            </Router>
+          </UIProvider>
+        </MoneyProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

@@ -103,20 +103,20 @@ export function Budgets() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-800">Budgets (Buckets)</h2>
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Budgets (Buckets)</h2>
         <div className="flex items-center gap-2">
           {archivedBuckets.length > 0 && (
             <button
               onClick={() => setShowArchived(!showArchived)}
               className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
                 showArchived
-                  ? "bg-gray-200 text-gray-700"
-                  : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                  ? "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                  : "bg-gray-100 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
               }`}
             >
               <Archive size={16} />
               <span className="hidden md:inline">Archived</span>
-              <span className="bg-gray-300 text-gray-700 text-xs px-1.5 py-0.5 rounded-full">
+              <span className="bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 text-xs px-1.5 py-0.5 rounded-full">
                 {archivedBuckets.length}
               </span>
             </button>
@@ -212,8 +212,8 @@ export function Budgets() {
           <div
             className={`p-4 rounded-xl border ${
               isOverAllocated
-                ? "bg-red-50 border-red-100"
-                : "bg-teal-50 border-teal-100"
+                ? "bg-red-50 dark:bg-red-900/20 border-red-100 dark:border-red-800/40"
+                : "bg-teal-50 dark:bg-teal-900/20 border-teal-100 dark:border-teal-800/40"
             }`}
           >
             <div className="flex items-start gap-3">
@@ -313,7 +313,7 @@ export function Budgets() {
           })}
 
         {buckets.length === 0 && (
-          <div className="col-span-full p-8 text-center text-gray-400 bg-gray-50 rounded-xl border-dashed border-2 border-gray-200">
+          <div className="col-span-full p-8 text-center text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-800 rounded-xl border-dashed border-2 border-gray-200 dark:border-gray-700">
             <p>
               No buckets created yet. Start by creating a fixed cost or flex
               pool bucket.
@@ -324,18 +324,18 @@ export function Budgets() {
 
       {/* Archived Buckets Section */}
       {showArchived && archivedBuckets.length > 0 && (
-        <div className="mt-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
-          <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-3">
+        <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+          <h3 className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
             Archived Buckets
           </h3>
           <div className="space-y-2">
             {archivedBuckets.map((bucket) => (
               <div
                 key={bucket.id}
-                className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-100"
+                className="flex items-center justify-between p-3 bg-white dark:bg-gray-700 rounded-lg border border-gray-100 dark:border-gray-600"
               >
                 <div>
-                  <p className="font-medium text-gray-700">{bucket.name}</p>
+                  <p className="font-medium text-gray-700 dark:text-gray-200">{bucket.name}</p>
                   <p className="text-xs text-gray-400">
                     {bucket.isMealTracker ? "Meal Tracker" : "Standard"}
                     {" · "}
@@ -359,7 +359,7 @@ export function Budgets() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => handleRestore(bucket.id)}
-                    className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-teal-700 bg-teal-50 hover:bg-teal-100 rounded-lg transition-colors"
+                    className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-teal-700 dark:text-teal-400 bg-teal-50 dark:bg-teal-900/30 hover:bg-teal-100 dark:hover:bg-teal-900/50 rounded-lg transition-colors"
                   >
                     <RotateCcw size={14} />
                     Restore
@@ -374,7 +374,7 @@ export function Budgets() {
                         hardDeleteBucket(bucket.id);
                       }
                     }}
-                    className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+                    className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 rounded-lg transition-colors"
                     title="Permanently delete"
                   >
                     <Trash2 size={14} />
