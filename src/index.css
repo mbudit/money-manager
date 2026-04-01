@@ -52,3 +52,13 @@ html.dark {
 .dark input[type="datetime-local"] {
   color-scheme: dark;
 }
+
+/* Dark mode select dropdown styling */
+.dark select {
+  color-scheme: dark;
+}
+
+.dark select option {
+  background-color: #1f2937;
+  color: #e5e7eb;
+}
