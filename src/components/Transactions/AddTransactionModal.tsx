@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useMoney } from "../../context/MoneyContext";
 import { Modal } from "../UI/Modal";
 import { ArrowDownLeft, ArrowUpRight, ArrowRight } from "lucide-react";
@@ -32,6 +32,7 @@ export function AddTransactionModal({
   const [activeTab, setActiveTab] = useState<TabType>("expense");
 
   // Form State
+  const amountRef = useRef<HTMLInputElement>(null);
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState(format(new Date(), "yyyy-MM-dd'T'HH:mm"));
   const [selectedBucketId, setSelectedBucketId] = useState("");
@@ -62,6 +63,8 @@ export function AddTransactionModal({
     } else if (isOpen && !transaction) {
       // Opening fresh (not edit mode) — use defaultDate if provided
       setDate(defaultDate || format(new Date(), "yyyy-MM-dd'T'HH:mm"));
+      // Auto-focus amount input
+      setTimeout(() => amountRef.current?.focus(), 100);
     } else if (!isOpen) {
       // Reset form when modal closes
       setActiveTab("expense");
@@ -252,6 +255,7 @@ export function AddTransactionModal({
               Rp
             </span>
             <input
+              ref={amountRef}
               type="text"
               inputMode="numeric"
               required
