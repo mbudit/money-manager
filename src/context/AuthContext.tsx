@@ -2,7 +2,8 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import {
   type User,
   GoogleAuthProvider,
-  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   signOut,
   onAuthStateChanged,
 } from "firebase/auth";
@@ -29,13 +30,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setLoading(false);
     });
 
+    // Handle redirect result when user comes back from Google
+    getRedirectResult(auth).catch((error) => {
+      console.error("Error handling redirect result", error);
+    });
+
     return unsubscribe;
   }, []);
 
   const signIn = async () => {
     const provider = new GoogleAuthProvider();
     try {
-      await signInWithPopup(auth, provider);
+      await signInWithRedirect(auth, provider);
     } catch (error) {
       console.error("Error signing in with Google", error);
     }
